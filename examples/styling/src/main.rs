@@ -110,19 +110,19 @@ impl Sandbox for Styling {
         )
         .height(100);
 
-        let checkbox = checkbox(
-            "Check me!",
-            self.checkbox_value,
-            Message::CheckboxToggled,
-        );
+        // let checkbox = checkbox(
+        //     "Check me!",
+        //     self.checkbox_value,
+        //     Message::CheckboxToggled,
+        // );
 
-        let toggler = toggler(
-            String::from("Toggle me!"),
-            self.toggler_value,
-            Message::TogglerToggled,
-        )
-        .width(Length::Shrink)
-        .spacing(10);
+        // let toggler = toggler(
+        //     String::from("Toggle me!"),
+        //     self.toggler_value,
+        //     Message::TogglerToggled,
+        // )
+        // .width(Length::Shrink)
+        // .spacing(10);
 
         let content = column![
             choose_theme,
@@ -135,7 +135,7 @@ impl Sandbox for Styling {
             row![
                 scrollable,
                 vertical_rule(38),
-                column![checkbox, toggler].spacing(20)
+                // column![checkbox, toggler].spacing(20)
             ]
             .spacing(10)
             .height(100)

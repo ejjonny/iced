@@ -83,11 +83,11 @@ impl Application for Events {
                 .collect(),
         );
 
-        let toggle = checkbox(
-            "Listen to runtime events",
-            self.enabled,
-            Message::Toggled,
-        );
+        // let toggle = checkbox(
+        //     "Listen to runtime events",
+        //     self.enabled,
+        //     Message::Toggled
+        // );
 
         let exit = button(
             text("Exit")
@@ -102,7 +102,7 @@ impl Application for Events {
             .align_items(Alignment::Center)
             .spacing(20)
             .push(events)
-            .push(toggle)
+            // .push(toggle)
             .push(exit);
 
         container(content)

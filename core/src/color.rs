@@ -131,6 +131,23 @@ impl Color {
     pub fn inverse(self) -> Color {
         Color::new(1.0f32 - self.r, 1.0f32 - self.g, 1.0f32 - self.b, self.a)
     }
+
+    /// Mix with another color with the given ratio (from 0 to 1)
+    pub fn mixed(self, other: Color, ratio: f32) -> Color {
+        if ratio >= 1.0 {
+            return other;
+        } else if ratio > 0.0 {
+            let self_ratio = 1.0 - ratio;
+            return Color::new(
+                self.r * self_ratio + other.r * ratio,
+                self.g * self_ratio + other.g * ratio,
+                self.b * self_ratio + other.b * ratio,
+                self.a * self_ratio + other.a * ratio
+            )
+        } else {
+            return self
+        }
+    }
 }
 
 impl From<[f32; 3]> for Color {

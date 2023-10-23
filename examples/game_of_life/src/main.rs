@@ -185,10 +185,10 @@ fn view_controls<'a>(
     row![
         playback_controls,
         speed_controls,
-        checkbox("Grid", is_grid_enabled, Message::ToggleGrid)
-            .size(16)
-            .spacing(5)
-            .text_size(16),
+        // checkbox("Grid", is_grid_enabled, Message::ToggleGrid)
+        //     .size(16)
+        //     .spacing(5)
+        //     .text_size(16),
         pick_list(preset::ALL, Some(preset), Message::PresetPicked)
             .padding(8)
             .text_size(16),

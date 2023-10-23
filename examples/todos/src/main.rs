@@ -357,18 +357,19 @@ impl Task {
     }
 
     fn view(&self, i: usize) -> Element<TaskMessage> {
+        use crate::widget::checkbox::Animated;
         match &self.state {
             TaskState::Idle => {
-                let checkbox = checkbox(
-                    &self.description,
-                    self.completed,
-                    TaskMessage::Completed,
-                )
-                .width(Length::Fill)
-                .text_shaping(text::Shaping::Advanced);
+                // let checkbox = checkbox(
+                //     &self.description,
+                //     Animated::new(self.completed),
+                //     TaskMessage::Completed,
+                // )
+                // .width(Length::Fill)
+                // .text_shaping(text::Shaping::Advanced);
 
                 row![
-                    checkbox,
+                    // checkbox,
                     button(edit_icon())
                         .on_press(TaskMessage::Edit)
                         .padding(10)
