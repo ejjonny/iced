@@ -51,6 +51,10 @@ where
     icon: Icon<Renderer::Font>,
     style: <Renderer::Theme as StyleSheet>::Style,
 }
+    pub fn hover(&mut self, value: bool) {
+        self.hovered_amount.transition(|current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
 
 impl<'a, Message, Renderer> Checkbox<'a, Message, Renderer>
 where
@@ -237,6 +241,16 @@ where
                     return event::Status::Captured;
                 }
             }
+            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+                let mouse_over = cursor.is_over(layout.bounds());
+                let currently_hovered = self.state.hovered_amount.real_value() == 1.0;
+                if mouse_over && !currently_hovered {
+                    shell.publish((self.on_hover)(true));
+                    shell.request_redraw(window::RedrawRequest::NextFrame);
+                } else if !mouse_over && currently_hovered {
+                    shell.publish((self.on_hover)(false));
+                    shell.request_redraw(window::RedrawRequest::NextFrame);
+                }
             _ => {}
         }
 
@@ -268,15 +282,12 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
-        let is_mouse_over = cursor.is_over(layout.bounds());
 
         let mut children = layout.children();
 
         let custom_style = if is_mouse_over {
             theme.hovered(&self.style, self.is_checked)
-        } else {
             theme.active(&self.style, self.is_checked)
-        };
 
         {
             let layout = children.next().unwrap();

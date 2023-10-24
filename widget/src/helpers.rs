@@ -20,6 +20,7 @@ use crate::text_input::{self, TextInput};
 use crate::toggler::{self, Toggler};
 use crate::tooltip::{self, Tooltip};
 use crate::{Column, MouseArea, Row, Space, VerticalSlider};
+use crate::style::animation::AnimatedValue;
 
 use std::borrow::Cow;
 use std::ops::RangeInclusive;
@@ -148,7 +149,7 @@ where
 /// [`Checkbox`]: crate::Checkbox
 pub fn checkbox<'a, Message, Renderer>(
     label: impl Into<String>,
-    is_checked: bool,
+    state: CheckboxState,
     f: impl Fn(bool) -> Message + 'a,
 ) -> Checkbox<'a, Message, Renderer>
 where

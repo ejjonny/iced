@@ -180,6 +180,7 @@ pub mod window;
 pub mod advanced;
 
 pub use style::theme;
+pub use style::animation;
 
 pub use crate::core::alignment;
 pub use crate::core::gradient;

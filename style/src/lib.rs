@@ -17,6 +17,7 @@
 pub use iced_core as core;
 
 pub mod application;
+pub mod animation;
 pub mod button;
 pub mod checkbox;
 pub mod container;
