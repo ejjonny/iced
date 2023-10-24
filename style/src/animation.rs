@@ -51,7 +51,7 @@ impl AnimatedValue {
         update(&mut target);
         if self.animating() {
             // Snapshot current state as the new animation origin
-            self.from = self.timing.timing(self.position);
+            self.from = self.position;
             self.to = Some(target);
         }
         self.started = Some(std::time::Instant::now());
@@ -101,11 +101,13 @@ impl AnimatedValue {
         let range = end - beginning;
         let completion = f32::abs(current / range);
         let timed: f32;
+        // If the animation switches directions & the asymmetrical timing curve also switches directions,
+        // my linear time position will mean something else in curved time because my timing curve flipped!
+        // How do I figure out the exact spot in curved time that corresponds with my current
+        // position, but with a flipped timing curve???
         if range != 0.0 {
             timed = beginning + (self.timing.timing(completion) * range);
-            // dbg!(timed, completion, current, range, beginning, self.timing.timing(completion));
-        // } else if range < 0.0 {
-        //     timed = beginning - (self.timing.timing(completion) * range);
+            dbg!(timed, completion, current, range, beginning, self.timing.timing(completion));
         } else {
             timed = self.position;
         }
