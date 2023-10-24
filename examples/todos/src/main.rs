@@ -357,7 +357,6 @@ impl Task {
     }
 
     fn view(&self, i: usize) -> Element<TaskMessage> {
-        use crate::widget::checkbox::Animated;
         match &self.state {
             TaskState::Idle => {
                 // let checkbox = checkbox(

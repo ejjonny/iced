@@ -17,163 +17,8 @@ use crate::core::{
 use crate::{Row, Text};
 
 use iced_renderer::core::{window, Background, BorderRadius};
-use iced_runtime::program;
+use iced_style::animation::{Interpolable, AnimatedValue, Animatable};
 pub use iced_style::checkbox::{Appearance, StyleSheet};
-
-use crate::core::overlay;
-
-#[allow(missing_debug_implementations)]
-#[allow(missing_docs)]
-pub struct Animating<'a, Message, T, Renderer = crate::Renderer>
-where
-    T: InterpolableState,
-{
-    child: Element<'a, Message, Renderer>,
-    animation: Animated<T>,
-    animation_update: Box<dyn Fn(Animated<T>) -> Message + 'a>,
-}
-
-#[allow(missing_debug_implementations)]
-#[allow(missing_docs)]
-impl<'a, Message, T, Renderer> Animating<'a, Message, T, Renderer>
-where
-    T: InterpolableState,
-{
-    pub fn new<F>(
-        child: Element<'a, Message, Renderer>,
-        animation: Animated<T>,
-        animation_update: F,
-    ) -> Self
-    where
-        F: 'a + Fn(Animated<T>) -> Message,
-    {
-        Animating {
-            child,
-            animation,
-            animation_update: Box::new(animation_update),
-        }
-    }
-    pub fn duration(mut self, duration: std::time::Duration) -> Self {
-        self.animation.duration = duration;
-        self
-    }
-
-    pub fn timing(mut self, timing: Timing) -> Self {
-        self.animation.timing = timing;
-        self
-    }
-}
-
-impl<'a, Message, T, Renderer> Widget<Message, Renderer>
-    for Animating<'a, Message, T, Renderer>
-where
-    T: InterpolableState + Copy,
-    Renderer: crate::core::Renderer,
-{
-    fn draw(
-        &self,
-        state: &Tree,
-        renderer: &mut Renderer,
-        theme: &<Renderer as iced_renderer::core::Renderer>::Theme,
-        style: &renderer::Style,
-        layout: Layout<'_>,
-        cursor: mouse::Cursor,
-        viewport: &Rectangle,
-    ) {
-        self.child
-            .as_widget()
-            .draw(state, renderer, theme, style, layout, cursor, viewport)
-    }
-    fn mouse_interaction(
-        &self,
-        state: &Tree,
-        layout: Layout<'_>,
-        cursor: mouse::Cursor,
-        viewport: &Rectangle,
-        renderer: &Renderer,
-    ) -> mouse::Interaction {
-        self.child
-            .as_widget()
-            .mouse_interaction(state, layout, cursor, viewport, renderer)
-    }
-    fn on_event(
-        &mut self,
-        tree: &mut Tree,
-        event: Event,
-        layout: Layout<'_>,
-        cursor: mouse::Cursor,
-        renderer: &Renderer,
-        clipboard: &mut dyn Clipboard,
-        shell: &mut Shell<'_, Message>,
-        viewport: &Rectangle,
-    ) -> event::Status {
-        match event {
-            Event::Window(window::Event::RedrawRequested(now)) => {
-                if self.animation.on_redraw_request_update(now) {
-                    shell.request_redraw(window::RedrawRequest::NextFrame);
-                    shell.publish((self.animation_update)(self.animation))
-                }
-            }
-            _ => {}
-        }
-        iter::once(self)
-            .into_iter()
-            .zip(&mut tree.children)
-            .zip(layout.children())
-            .map(|((animating, state), layout)| {
-                animating.child.as_widget_mut().on_event(
-                    state,
-                    event.clone(),
-                    layout,
-                    cursor,
-                    renderer,
-                    clipboard,
-                    shell,
-                    viewport,
-                )
-            })
-            .fold(event::Status::Ignored, event::Status::merge)
-    }
-    fn operate(
-        &self,
-        state: &mut Tree,
-        layout: Layout<'_>,
-        renderer: &Renderer,
-        operation: &mut dyn iced_renderer::core::widget::Operation<Message>,
-    ) {
-        self.child
-            .as_widget()
-            .operate(state, layout, renderer, operation)
-    }
-    fn layout(
-        &self,
-        renderer: &Renderer,
-        limits: &layout::Limits,
-    ) -> layout::Node {
-        self.child.as_widget().layout(renderer, limits)
-    }
-    fn width(&self) -> Length {
-        self.child.as_widget().width()
-    }
-    fn height(&self) -> Length {
-        self.child.as_widget().height()
-    }
-    fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&self.child)]
-    }
-}
-
-impl<'a, Message, T, Renderer> From<Animating<'a, Message, T, Renderer>>
-    for Element<'a, Message, Renderer>
-where
-    Message: 'a,
-    T: InterpolableState + Copy + 'a,
-    Renderer: crate::core::Renderer + 'a,
-{
-    fn from(animating: Animating<'a, Message, T, Renderer>) -> Self {
-        Self::new(animating)
-    }
-}
 
 /// A box that can be checked.
 ///
@@ -199,7 +44,7 @@ where
     Renderer: text::Renderer,
     Renderer::Theme: StyleSheet + crate::text::StyleSheet,
 {
-    state: Animated<CheckboxState>,
+    state: CheckboxState,
     on_toggle: Box<dyn Fn(bool) -> Message + 'a>,
     on_hover: Box<dyn Fn(bool) -> Message + 'a>,
     label: String,
@@ -213,193 +58,41 @@ where
     icon: Icon<Renderer::Font>,
     style: <Renderer::Theme as StyleSheet>::Style,
 }
-#[allow(missing_docs)]
+
 #[derive(Default, Debug, Clone, Copy)]
 pub struct CheckboxState {
-    pub checked_amount: f32,
-    pub hovered_amount: f32,
+    pub checked_amount: AnimatedValue,
+    pub hovered_amount: AnimatedValue,
 }
-#[allow(missing_docs)]
+
 impl CheckboxState {
     pub fn check(&mut self, value: bool) {
-        self.checked_amount = if value { 1.0 } else { 0.0 }
+        self.checked_amount.transition(|current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
+    }
+    pub fn hover(&mut self, value: bool) {
+        self.hovered_amount.transition(|current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
     }
 }
-impl InterpolableState for CheckboxState {
-    fn interpolate(self, other: Self, ratio: f32) -> Self {
-        Self {
-            checked_amount: self
-                .checked_amount
-                .interpolated(other.checked_amount, ratio),
-            hovered_amount: self
-                .hovered_amount
-                .interpolated(other.hovered_amount, ratio),
-        }
-    }
-}
-#[allow(missing_docs)]
+
 impl CheckboxState {
     pub fn new(is_checked: bool, is_hovered: bool) -> Self {
         Self {
-            checked_amount: if is_checked { 1.0 } else { 0.0 },
-            hovered_amount: if is_hovered { 1.0 } else { 0.0 },
+            checked_amount: AnimatedValue::new(if is_checked { 1.0 } else { 0.0 }),
+            hovered_amount: AnimatedValue::new(if is_hovered { 1.0 } else { 0.0 }),
         }
     }
 }
 
-#[allow(missing_debug_implementations)]
-#[allow(missing_docs)]
-#[derive(Default, Debug)]
-pub struct Animated<T>
-where
-    T: InterpolableState,
-{
-    linear_progress: f32,
-    pub started: Option<std::time::Instant>,
-    pub last: Option<std::time::Instant>,
-    pub from: T,
-    pub to: Option<T>,
-    pub duration: std::time::Duration,
-    pub timing: Timing,
-}
-#[allow(missing_docs)]
-pub trait InterpolableState {
-    fn interpolate(self, other: Self, ratio: f32) -> Self;
-}
-impl<T> Clone for Animated<T>
-where
-    T: InterpolableState + Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            linear_progress: self.linear_progress.clone(),
-            started: self.started.clone(),
-            last: self.last.clone(),
-            from: self.from.clone(),
-            to: self.to.clone(),
-            duration: self.duration.clone(),
-            timing: self.timing.clone(),
-        }
-    }
-}
-impl<T> Copy for Animated<T> where T: InterpolableState + Copy {}
-// impl Animated<bool> {
-//     fn amount(self) -> f32 {
-//         0.0
-// if self.animating() {
-//     return if self.to.unwrap_or(self.from) {
-//         self.timed_progress()
-//     } else {
-//         1.0 - self.timed_progress()
-//     };
-// } else {
-//     return if self.from { 1.0 } else { 0.0 };
-// }
-//     }
-// }
-
-#[allow(missing_debug_implementations)]
-#[allow(missing_docs)]
-impl<T> Animated<T>
-where
-    T: InterpolableState + Copy,
-{
-    pub fn new(value: T) -> Self {
-        Animated {
-            linear_progress: 0.0,
-            started: None,
-            last: None,
-            from: value,
-            to: None,
-            duration: std::time::Duration::from_millis(500),
-            timing: Timing::Linear,
-        }
-    }
-    pub fn interpolated_value(self) -> T {
-        if let Some(other) = self.to {
-            self.from.interpolate(other, self.timed_progress())
-        } else {
-            self.from
-        }
-    }
-    pub fn real_value(&self) -> T {
-        self.to.unwrap_or(self.from)
-    }
-    pub fn transition<F>(&mut self, update: F)
-    where
-        F: Fn(&mut T),
-    {
-        let mut target = self.from.clone();
-        update(&mut target);
-        if self.animating() {
-            // Snapshot current state as the new animation origin
-            self.from = self.from.interpolate(self.to.unwrap_or(self.from), self.linear_progress);
-            // How long should this take?
-            // This progress represents multiple animated axes
-            // Ideally we just go the same speed but how do we conceptualize distance?
-            // Every animatable piece of data should probably be it's own 1D axis with it's
-            // own animated state
-            // The current approach bundles everything...
-            self.linear_progress = 1.0 - self.linear_progress;
-            self.to = Some(target);
-        }
-        self.last = None;
-        self.started = Some(std::time::Instant::now());
-        self.to = Some(target);
-    }
-    pub fn on_redraw_request_update(
+impl Animatable for CheckboxState {
+    fn on_redraw_request_update(
         &mut self,
         now: std::time::Instant,
     ) -> bool {
-        if let Some(start) = self.started {
-            let elapsed = (now - self.last.unwrap_or(start)).as_millis() as f32;
-            let duration = self.duration.as_millis() as f32;
-            self.linear_progress += elapsed / duration;
-            if self.linear_progress >= 1.0 || self.linear_progress.is_nan() {
-                if let Some(to) = self.to {
-                    self.from = to;
-                }
-                self.linear_progress = 0.0;
-                self.started = None;
-                self.to = None;
-                self.last = None;
-            }
-            self.last = Some(now);
-            return true;
-        }
-        false
-    }
-    pub fn timed_progress(self) -> f32 {
-        self.timing.timing(self.linear_progress)
-    }
-
-    pub fn animating(self) -> bool {
-        self.to.is_some()
-    }
-}
-
-#[allow(missing_docs)]
-#[derive(Clone, Copy, Debug, Default)]
-pub enum Timing {
-    #[default]
-    Linear,
-    EaseIn,
-    EaseOut,
-    EaseInOut,
-    Custom,
-}
-
-impl Timing {
-    fn timing(self, linear_progress: f32) -> f32 {
-        let x = linear_progress;
-        let pi = std::f32::consts::PI;
-        match self {
-            Timing::Linear => linear_progress,
-            Timing::EaseIn => 1.0 - f32::cos((x * pi) / 2.0),
-            Timing::EaseOut => f32::sin((x * pi) / 2.0),
-            Timing::EaseInOut => -(f32::cos(pi * x) - 1.0) / 2.0,
-            _ => linear_progress,
-        }
+        self.checked_amount.on_redraw_request_update(now) || self.hovered_amount.on_redraw_request_update(now)
     }
 }
 
@@ -424,7 +117,7 @@ where
     ///     `Message`.
     pub fn new<F, G>(
         label: impl Into<String>,
-        state: Animated<CheckboxState>,
+        state: CheckboxState,
         on_toggle: F,
         on_hover: G,
     ) -> Self
@@ -574,16 +267,22 @@ where
 
                 if mouse_over {
                     shell.publish((self.on_toggle)(
-                        !(self.state.to.unwrap_or(self.state.from).checked_amount == 1.0),
+                        !(self.state.checked_amount.real_value() == 1.0),
                     ));
                     shell.request_redraw(window::RedrawRequest::NextFrame);
                     return event::Status::Captured;
                 }
             }
-            Event::Mouse(mouse::Event::CursorMoved { position }) => {
-                // if cursor.is_over(layout.bounds()) {
-                //     dbg!(position);
-                // }
+            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+                let mouse_over = cursor.is_over(layout.bounds());
+                let currently_hovered = self.state.hovered_amount.real_value() == 1.0;
+                if mouse_over && !currently_hovered {
+                    shell.publish((self.on_hover)(true));
+                    shell.request_redraw(window::RedrawRequest::NextFrame);
+                } else if !mouse_over && currently_hovered {
+                    shell.publish((self.on_hover)(false));
+                    shell.request_redraw(window::RedrawRequest::NextFrame);
+                }
             }
             _ => {}
         }
@@ -616,25 +315,16 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
-        let amount = self.state.interpolated_value().checked_amount;
-        dbg!(amount);
-
-        let is_mouse_over = cursor.is_over(layout.bounds());
+        let checked_amount = self.state.checked_amount.timed_progress();
+        let hovered_amount = self.state.hovered_amount.timed_progress();
 
         let mut children = layout.children();
 
-        let custom_style_on = if is_mouse_over {
-            theme.hovered(&self.style, true)
-        } else {
-            theme.active(&self.style, true)
-        };
-        let custom_style_off = if is_mouse_over {
-            theme.hovered(&self.style, false)
-        } else {
-            theme.active(&self.style, false)
-        };
-        let interpolated_style =
-            custom_style_off.interpolated(custom_style_on, amount);
+        let checked_interpolated =
+            theme.active(&self.style, false).interpolated(theme.active(&self.style, true), checked_amount);
+        let hovered_interpolated =
+            theme.hovered(&self.style, false).interpolated(theme.hovered(&self.style, true), checked_amount);
+        let interpolated_style = checked_interpolated.interpolated(hovered_interpolated, hovered_amount);
 
         {
             let layout = children.next().unwrap();
@@ -659,9 +349,7 @@ where
             } = &self.icon;
             let size = size.unwrap_or(bounds.height * 0.7);
 
-            let mut transparent_icon = interpolated_style.icon_color;
-            transparent_icon.a = 0.0;
-            if amount != 0.0 {
+            if checked_amount != 0.0 {
                 renderer.fill_text(text::Text {
                     content: &code_point.to_string(),
                     font: *font,
@@ -729,64 +417,4 @@ pub struct Icon<Font> {
     pub line_height: text::LineHeight,
     /// The shaping strategy of the icon.
     pub shaping: text::Shaping,
-}
-
-trait Interpolable {
-    fn interpolated(self, other: Self, ratio: f32) -> Self;
-}
-impl Interpolable for crate::core::Color {
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        self.mixed(other, ratio)
-    }
-}
-impl Interpolable for f32 {
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        self * (1.0 - ratio) + other * ratio
-    }
-}
-impl Interpolable for Background {
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        match (self, other) {
-            (Background::Color(a), Background::Color(b)) => {
-                return Background::Color(a.interpolated(b, ratio))
-            }
-            _ => return other,
-        }
-    }
-}
-impl<T> Interpolable for Option<T>
-where
-    T: Interpolable + Copy,
-{
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        match (self, other) {
-            (Some(a), Some(b)) => Some(a.interpolated(b, ratio)),
-            _ => other,
-        }
-    }
-}
-impl Interpolable for BorderRadius {
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        self
-        // self.0.iter().zip(other.0.iter()).map |a, b| { a.interpolated(b, ratio) }
-    }
-}
-
-impl Interpolable for Appearance {
-    fn interpolated(self, other: Self, ratio: f32) -> Self {
-        Appearance {
-            background: self.background.interpolated(other.background, ratio),
-            icon_color: self.icon_color.interpolated(other.icon_color, ratio),
-            border_radius: self
-                .border_radius
-                .interpolated(other.border_radius, ratio),
-            border_width: self
-                .border_width
-                .interpolated(other.border_width, ratio),
-            border_color: self
-                .border_color
-                .interpolated(other.border_color, ratio),
-            text_color: self.text_color.interpolated(other.text_color, ratio),
-        }
-    }
 }

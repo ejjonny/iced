@@ -1,9 +1,10 @@
-use std::marker::PhantomData;
-
+use iced::animation::{AnimatedValue, Timing, self};
+use iced::executor;
 use iced::font::{self, Font};
-use iced::widget::checkbox::{Animated, Animating, CheckboxState};
-use iced::widget::{checkbox, column, container, text, Checkbox};
-use iced::{executor, window, Event};
+use iced::theme::Checkbox;
+use iced::widget::animated::Animating;
+use iced::widget::checkbox::{CheckboxState, Appearance};
+use iced::widget::{checkbox, column, container, text};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 
 const ICON_FONT: Font = Font::with_name("icons");
@@ -15,7 +16,7 @@ pub fn main() -> iced::Result {
 #[derive(Default)]
 struct Example {
     default_checkbox: bool,
-    custom_checkbox: Animated<CheckboxState>,
+    custom_checkbox: CheckboxState,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -24,7 +25,7 @@ enum Message {
     Checked(bool),
     Hovered(bool),
     FontLoaded(Result<(), font::Error>),
-    AnimationUpdate(Animated<CheckboxState>),
+    AnimationUpdate(CheckboxState),
 }
 
 impl Application for Example {
@@ -49,10 +50,10 @@ impl Application for Example {
         match message {
             Message::DefaultChecked(value) => self.default_checkbox = value,
             Message::Checked(value) => {
-                self.custom_checkbox.transition(|f| f.check(value) );
+                self.custom_checkbox.check(value);
             }
             Message::Hovered(value) => {
-                // self.custom_checkbox.transition(|f| f.check() );
+                self.custom_checkbox.hover(value);
             }
             Message::FontLoaded(_) => (),
             Message::AnimationUpdate(update) => {
@@ -78,14 +79,21 @@ impl Application for Example {
             size: None,
             line_height: text::LineHeight::Relative(1.0),
             shaping: text::Shaping::Basic,
-        });
+        })
+        .style(Checkbox::Success);
         let animating = Animating::new(
             Element::from(custom_checkbox),
             self.custom_checkbox,
             Message::AnimationUpdate,
         )
-        .duration(std::time::Duration::from_millis(2000))
-        .timing(checkbox::Timing::EaseIn);
+        .animation(|anim| {
+            anim.checked_amount.duration =
+                std::time::Duration::from_millis(1000);
+            anim.checked_amount.timing = animation::Timing::Linear;
+            anim.hovered_amount.duration =
+                std::time::Duration::from_millis(100);
+            anim.hovered_amount.timing = animation::Timing::EaseInOut;
+        });
 
         let content = column![animating].spacing(22);
 

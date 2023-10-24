@@ -15,12 +15,13 @@
     clippy::new_without_default,
     clippy::useless_conversion
 )]
-#![deny(missing_docs, unused_results)]
+#![deny(unused_results)]
 #![forbid(unsafe_code, rust_2018_idioms)]
 #![allow(clippy::inherent_to_string, clippy::type_complexity)]
 pub use iced_core as core;
 
 pub mod application;
+pub mod animation;
 pub mod button;
 pub mod checkbox;
 pub mod container;

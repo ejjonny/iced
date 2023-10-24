@@ -28,3 +28,14 @@ impl From<gradient::Linear> for Background {
         Background::Gradient(Gradient::Linear(gradient))
     }
 }
+
+impl Background {
+    pub fn interpolated(self, other: Self, ratio: f32) -> Self {
+        match (self, other) {
+            (Background::Color(a), Background::Color(b)) => {
+                return Background::Color(a.mixed(b, ratio))
+            }
+            _ => return other,
+        }
+    }
+}

@@ -19,11 +19,10 @@ use crate::text_input::{self, TextInput};
 use crate::toggler::{self, Toggler};
 use crate::tooltip::{self, Tooltip};
 use crate::{Column, MouseArea, Row, Space, VerticalSlider};
+use crate::style::animation::AnimatedValue;
 
 use std::borrow::Cow;
 use std::ops::RangeInclusive;
-
-use crate::checkbox::Animated;
 
 /// Creates a [`Column`] with the given children.
 ///
@@ -141,7 +140,7 @@ where
 /// [`Checkbox`]: widget::Checkbox
 pub fn checkbox<'a, Message, Renderer>(
     label: impl Into<String>,
-    state: Animated<CheckboxState>,
+    state: CheckboxState,
     on_toggle: impl Fn(bool) -> Message + 'a,
     on_hover: impl Fn(bool) -> Message + 'a,
 ) -> Checkbox<'a, Message, Renderer>

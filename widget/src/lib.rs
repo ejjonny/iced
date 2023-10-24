@@ -3,8 +3,8 @@
     html_logo_url = "https://raw.githubusercontent.com/iced-rs/iced/9ab6923e943f784985e9ef9ca28b10278297225d/docs/logo.svg"
 )]
 #![deny(
-    missing_debug_implementations,
-    missing_docs,
+    // missing_debug_implementations,
+    // missing_docs,
     unused_results,
     clippy::extra_unused_lifetimes,
     clippy::from_over_into,
@@ -25,6 +25,7 @@ mod column;
 mod mouse_area;
 mod row;
 
+pub mod animated;
 pub mod button;
 pub mod checkbox;
 pub mod combo_box;
