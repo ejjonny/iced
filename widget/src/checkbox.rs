@@ -54,14 +54,13 @@ where
 #[derive(Debug, Clone, Copy)]
     pub checked_amount: AnimatedValue<std::time::Instant>,
     pub hovered_amount: AnimatedValue<std::time::Instant>,
-        // let now = std::time::Instant::now();
-        // self.checked_amount.transition(now, |current| {
-        //    *current = if value { 1.0 } else { 0.0 }
-        // });
+        self.checked_amount.transition(std::time::Instant::now(), |current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
     pub fn hover(&mut self, value: bool) {
-        // self.hovered_amount.transition(|current| {
-        //    *current = if value { 1.0 } else { 0.0 }
-        // });
+        self.hovered_amount.transition(std::time::Instant::now(), |current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
         self.checked_amount.tick(now) || self.hovered_amount.tick(now)
 
 impl<'a, Message, Renderer> Checkbox<'a, Message, Renderer>
@@ -290,6 +289,7 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
+        dbg!(checked_amount);
 
         let mut children = layout.children();
 
