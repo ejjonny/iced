@@ -1,9 +1,9 @@
-use iced::animation::{AnimatedValue, Timing, self};
+use iced::animation::{self, AnimatedValue, Timing};
 use iced::executor;
 use iced::font::{self, Font};
 use iced::theme::Checkbox;
 use iced::widget::animated::Animating;
-use iced::widget::checkbox::{CheckboxState, Appearance};
+use iced::widget::checkbox::{Appearance, CheckboxState};
 use iced::widget::{checkbox, column, container, text};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 
@@ -13,10 +13,21 @@ pub fn main() -> iced::Result {
     Example::run(Settings::default())
 }
 
-#[derive(Default)]
 struct Example {
     default_checkbox: bool,
     custom_checkbox: CheckboxState,
+}
+
+impl Default for Example {
+    fn default() -> Self {
+        Self {
+            default_checkbox: false,
+            custom_checkbox: CheckboxState {
+                checked_amount: AnimatedValue::new(0.0),
+                hovered_amount: AnimatedValue::new(0.0),
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -87,11 +98,9 @@ impl Application for Example {
             Message::AnimationUpdate,
         )
         .animation(|anim| {
-            anim.checked_amount.duration =
-                std::time::Duration::from_millis(1000);
-            anim.checked_amount.timing = animation::Timing::Linear;
-            anim.hovered_amount.duration =
-                std::time::Duration::from_millis(100);
+            anim.checked_amount.duration_ms = 1000.0;
+            anim.checked_amount.timing = animation::Timing::EaseInQuint;
+            anim.hovered_amount.duration_ms = 100.0;
             anim.hovered_amount.timing = animation::Timing::EaseInOut;
         });
 

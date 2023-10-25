@@ -59,22 +59,23 @@ where
     style: <Renderer::Theme as StyleSheet>::Style,
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct CheckboxState {
-    pub checked_amount: AnimatedValue,
-    pub hovered_amount: AnimatedValue,
+    pub checked_amount: AnimatedValue<std::time::Instant>,
+    pub hovered_amount: AnimatedValue<std::time::Instant>,
 }
 
 impl CheckboxState {
     pub fn check(&mut self, value: bool) {
-        self.checked_amount.transition(|current| {
-           *current = if value { 1.0 } else { 0.0 }
-        });
+        // let now = std::time::Instant::now();
+        // self.checked_amount.transition(now, |current| {
+        //    *current = if value { 1.0 } else { 0.0 }
+        // });
     }
     pub fn hover(&mut self, value: bool) {
-        self.hovered_amount.transition(|current| {
-           *current = if value { 1.0 } else { 0.0 }
-        });
+        // self.hovered_amount.transition(|current| {
+        //    *current = if value { 1.0 } else { 0.0 }
+        // });
     }
 }
 
@@ -92,7 +93,7 @@ impl Animatable for CheckboxState {
         &mut self,
         now: std::time::Instant,
     ) -> bool {
-        self.checked_amount.on_redraw_request_update(now) || self.hovered_amount.on_redraw_request_update(now)
+        self.checked_amount.tick(now) || self.hovered_amount.tick(now)
     }
 }
 
