@@ -327,7 +327,6 @@ where
     ) {
         let checked_amount = self.state.checked_amount.timed_progress();
         let hovered_amount = self.state.hovered_amount.timed_progress();
-        dbg!(hovered_amount);
 
         let mut children = layout.children();
 
