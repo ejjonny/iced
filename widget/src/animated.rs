@@ -8,7 +8,7 @@ use crate::core::{
     Clipboard, Element, Layout, Length, Rectangle,
     Shell, Widget,
 };
-use iced_style::animation::{AnimatedValue, Interpolable, Timing, Animatable};
+use iced_style::animation::{Animation, Interpolable, Timing, Animatable};
 
 pub struct Animating<'a, Message, T, Renderer = crate::Renderer>
 where

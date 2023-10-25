@@ -2,17 +2,54 @@ pub trait Animatable {
     fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool;
 }
 
+pub trait AnimatableValue<T = Self> where Self: std::fmt::Debug + Copy + PartialEq {
+    fn distance(self, other: Self) -> f32;
+    fn diff(self, other: Self) -> Self;
+    fn sum(self, other: Self) -> Self;
+    fn prod(self, other: Self) -> Self;
+    fn scale(self, amount: f32) -> Self;
+    fn magnitude(self) -> f32;
+    fn normalized(self) -> Self;
+}
+
+impl AnimatableValue for f32 {
+    fn distance(self, other: Self) -> f32 {
+        self.diff(other).magnitude()
+    }
+    fn diff(self, other: Self) -> Self {
+        self - other
+    }
+    fn sum(self, other: Self) -> Self {
+        self + other
+    }
+    fn prod(self, other: Self) -> Self {
+        self * other
+    }
+    fn scale(self, amount: f32) -> Self {
+        self * amount
+    }
+    fn magnitude(self) -> f32 {
+        f32::sqrt(f32::powf(self, 2.0))
+    }
+    fn normalized(self) -> Self {
+        self / self.magnitude()
+    }
+}
+
 #[derive(Default, Debug, Clone, Copy)]
-pub struct AnimatedValue<Time> {
-    pub position: f32,
+pub struct Animation<Time, Value>
+where
+    Value: AnimatableValue,
+{
+    pub position: Value,
     pub duration_ms: f32,
     pub timing: Timing,
-    pub animation_state: Option<AnimationState<Time>>,
+    pub animation_state: Option<AnimationState<Time, Value>>,
 }
 #[derive(Default, Debug, Clone, Copy)]
-pub struct AnimationState<Time> {
-    pub origin: f32,
-    pub destination: f32,
+pub struct AnimationState<Time, Value> {
+    pub origin: Value,
+    pub destination: Value,
     pub started_time: Time,
     pub last_tick_time: Time,
     pub speed_at_interrupt: Option<f32>,
@@ -27,27 +64,28 @@ impl AnimationTime for std::time::Instant {
     }
 }
 
-impl<Time> AnimatedValue<Time>
+impl<Time, Value> Animation<Time, Value>
 where
     Time: AnimationTime + std::fmt::Debug,
+    Value: AnimatableValue,
 {
-    pub fn new(position: f32) -> Self {
-        AnimatedValue {
+    pub fn new(position: Value) -> Self {
+        Animation {
             position,
             duration_ms: 0.0,
             timing: Timing::Linear,
             animation_state: None,
         }
     }
-    pub fn transition(&mut self, destination: f32, time: Time) {
+    pub fn transition(&mut self, destination: Value, time: Time) {
         let timed_progress = self.timed_progress();
         if let Some(animation) = &mut self.animation_state {
             // Snapshot current state as the new animation origin
             if animation.speed_at_interrupt.is_none() {
-                animation.speed_at_interrupt = Some(f32::abs(
-                    (animation.destination - animation.origin)
+                animation.speed_at_interrupt = Some(
+                    animation.destination.distance(animation.origin)
                         / self.duration_ms,
-                ));
+                );
             }
             animation.origin = timed_progress;
             self.position = animation.origin;
@@ -57,7 +95,7 @@ where
                 started_time: time,
                 last_tick_time: time,
                 origin: self.position,
-                destination: destination,
+                destination,
                 speed_at_interrupt: None,
             })
         }
@@ -65,55 +103,45 @@ where
     pub fn tick(&mut self, time: Time) -> bool {
         if let Some(animation) = &mut self.animation_state {
             let elapsed = time.elapsed_since(animation.last_tick_time);
-            let position_delta: f32;
+            let position_delta: Value;
             if let Some(speed) = animation.speed_at_interrupt {
-                let signed_speed = if animation.origin > animation.destination {
-                    -speed
-                } else {
-                    speed
-                };
-                position_delta = elapsed * signed_speed;
+                let direction = animation.destination.diff(self.position).normalized();
+                position_delta = direction.scale(elapsed * speed);
             } else {
                 let duration = self.duration_ms;
                 let delta = elapsed / duration;
-                position_delta =
-                    delta * (animation.destination - animation.origin);
+                let direction = animation.destination.diff(animation.origin);
+                position_delta = direction.scale(delta);
             }
             let mut finished = false;
             if self.duration_ms == 0.0 {
                 finished = true;
             } else {
-                self.position += position_delta;
-                if position_delta.is_sign_positive()
-                    && self.position >= animation.destination
-                    || position_delta.is_sign_negative()
-                        && self.position <= animation.destination
-                {
-                    finished = true;
+                if position_delta.magnitude() >= self.position.distance(animation.destination) {
+                    finished = true
                 }
+                self.position = self.position.sum(position_delta);
             }
             animation.last_tick_time = time;
             if finished {
                 self.position = animation.destination;
                 self.animation_state = None;
-                return true;
             }
             return true;
         };
         false
     }
 
-    pub fn timed_progress(self) -> f32 {
+    pub fn timed_progress(self) -> Value {
         match self.animation_state {
             Some(animation) if animation.destination != animation.origin => {
-                let current = self.position - animation.origin;
-                let range = animation.destination - animation.origin;
-                let completion = current / range;
-                animation.origin + (self.timing.timing(completion) * range)
+                let progress_in_animation = self.position.distance(animation.origin);
+                let range_of_animation = animation.destination.distance(animation.origin);
+                let completion = progress_in_animation / range_of_animation;
+                let animation_range = animation.destination.diff(animation.origin);
+                animation.origin.sum(animation_range.scale(self.timing.timing(completion)))
             }
-            _ => {
-                return self.position
-            }
+            _ => return self.position,
         }
     }
 
@@ -121,13 +149,14 @@ where
         self.animation_state.is_some()
     }
 }
+
 #[cfg(test)]
 mod animatedvalue_tests {
     use super::*;
 
     #[test]
     fn test_instant_animation() {
-        let mut anim = AnimatedValue::<f32>::new(0.0);
+        let mut anim = Animation::<f32, f32>::new(0.0);
         let clock = 0.0;
         // If animation duration is 0.0 the transition should happen instantly
         // & require a redraw without any time passing
@@ -140,7 +169,7 @@ mod animatedvalue_tests {
 
     #[test]
     fn test_progression() {
-        let mut anim = AnimatedValue::<f32>::new(0.0);
+        let mut anim = Animation::<f32, f32>::new(0.0);
         let mut clock = 0.0;
         // With a duration of 1.0 & linear timing we should be halfway to our
         // destination at 0.5
@@ -178,7 +207,7 @@ mod animatedvalue_tests {
     }
     #[test]
     fn test_interrupt() {
-        let mut anim = AnimatedValue::<f32>::new(0.0);
+        let mut anim = Animation::<f32, f32>::new(0.0);
         let mut clock = 0.0;
         anim.duration_ms = 1.0;
         // Interruptions should continue at the same speed the interrupted
@@ -216,7 +245,7 @@ mod animatedvalue_tests {
 
     #[test]
     fn test_interrupt_nonlinear() {
-        let mut anim = AnimatedValue::<f32>::new(1.0);
+        let mut anim = Animation::<f32, f32>::new(1.0);
         let mut clock = 0.0;
         anim.duration_ms = 10.0;
         anim.timing = Timing::EaseIn;
@@ -249,7 +278,7 @@ mod animatedvalue_tests {
     }
     #[test]
     fn test_multiple_interrupts_start_forward() {
-        let mut anim = AnimatedValue::<f32>::new(0.0);
+        let mut anim = Animation::<f32, f32>::new(0.0);
         let mut clock = 0.0;
         anim.duration_ms = 1.0;
         anim.timing = Timing::EaseInOut;

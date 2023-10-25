@@ -1,4 +1,4 @@
-use iced::animation::{self, AnimatedValue, Timing};
+use iced::animation::{self, Animation, Timing};
 use iced::executor;
 use iced::font::{self, Font};
 use iced::theme::Checkbox;
@@ -24,9 +24,9 @@ impl Default for Example {
             default_checkbox: false,
             custom_checkbox: CheckboxState {
                 checked: false,
-                checked_amount: AnimatedValue::new(0.0),
+                checked_amount: Animation::new(0.0),
                 hovered: false,
-                hovered_amount: AnimatedValue::new(0.0),
+                hovered_amount: Animation::new(0.0),
             },
         }
     }
