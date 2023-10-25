@@ -75,7 +75,9 @@ where
                 0.0
             }),
     fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
-        self.checked_amount.tick(now) || self.hovered_amount.tick(now)
+        let check_redraw = self.checked_amount.tick(now);
+        let hover_redraw = self.hovered_amount.tick(now);
+        check_redraw || hover_redraw
 
 impl<'a, Message, Renderer> Checkbox<'a, Message, Renderer>
 where
@@ -304,6 +306,7 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
+        dbg!(hovered_amount);
 
         let mut children = layout.children();
 
@@ -315,7 +318,6 @@ where
             .interpolated(theme.hovered(&self.style, true), checked_amount);
         let interpolated_style = checked_interpolated
             .interpolated(hovered_interpolated, hovered_amount);
-        dbg!(interpolated_style.icon_color);
 
         {
             let layout = children.next().unwrap();

@@ -314,6 +314,8 @@ pub enum Timing {
     EaseOut,
     EaseInOut,
     EaseInQuint,
+    EaseOutQuint,
+    EaseInOutQuint,
     Custom,
 }
 
@@ -327,6 +329,14 @@ impl Timing {
             Timing::EaseOut => f32::sin((x * pi) / 2.0),
             Timing::EaseInOut => -(f32::cos(pi * x) - 1.0) / 2.0,
             Timing::EaseInQuint => x * x * x * x * x,
+            Timing::EaseOutQuint => 1.0 - f32::powf(1.0 - x, 5.0),
+            Timing::EaseInOutQuint => {
+                if x < 0.5 {
+                    16.0 * x * x * x * x * x
+                } else {
+                    1.0 - f32::powf(-2.0 * x + 2.0, 5.0) / 2.0
+                }
+            }
             _ => linear_progress,
         }
     }
