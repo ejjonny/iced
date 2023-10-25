@@ -53,22 +53,24 @@ where
     style: <Renderer::Theme as StyleSheet>::Style,
 }
 #[derive(Debug, Clone, Copy)]
+    pub checked: bool,
     pub checked_amount: AnimatedValue<std::time::Instant>,
+    pub hovered: bool,
     pub hovered_amount: AnimatedValue<std::time::Instant>,
+        self.checked = value;
         self.checked_amount
-            .transition(std::time::Instant::now(), |current| {
-                *current = if value { 1.0 } else { 0.0 }
-            });
+            .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
     pub fn hover(&mut self, value: bool) {
+        self.hovered = value;
         self.hovered_amount
-            .transition(std::time::Instant::now(), |current| {
-                *current = if value { 1.0 } else { 0.0 }
-            });
+            .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
+            checked: is_checked,
             checked_amount: AnimatedValue::new(if is_checked {
                 1.0
             } else {
                 0.0
             }),
+            hovered: is_hovered,
             hovered_amount: AnimatedValue::new(if is_hovered {
                 1.0
             } else {
@@ -260,14 +262,14 @@ where
 
                 if mouse_over {
                     shell.publish((self.on_toggle)(!self.is_checked));
-
+                        !(self.state.checked),
                     return event::Status::Captured;
                 }
             }
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 let mouse_over = cursor.is_over(layout.bounds());
                 let currently_hovered =
-                    self.state.hovered_amount.real_value() == 1.0;
+                    self.state.hovered;
                 if mouse_over && !currently_hovered {
                     shell.publish((self.on_hover)(true));
                     shell.request_redraw(window::RedrawRequest::NextFrame);

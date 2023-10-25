@@ -23,7 +23,9 @@ impl Default for Example {
         Self {
             default_checkbox: false,
             custom_checkbox: CheckboxState {
+                checked: false,
                 checked_amount: AnimatedValue::new(0.0),
+                hovered: false,
                 hovered_amount: AnimatedValue::new(0.0),
             },
         }
