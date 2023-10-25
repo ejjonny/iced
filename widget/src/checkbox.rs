@@ -67,15 +67,14 @@ pub struct CheckboxState {
 
 impl CheckboxState {
     pub fn check(&mut self, value: bool) {
-        // let now = std::time::Instant::now();
-        // self.checked_amount.transition(now, |current| {
-        //    *current = if value { 1.0 } else { 0.0 }
-        // });
+        self.checked_amount.transition(std::time::Instant::now(), |current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
     }
     pub fn hover(&mut self, value: bool) {
-        // self.hovered_amount.transition(|current| {
-        //    *current = if value { 1.0 } else { 0.0 }
-        // });
+        self.hovered_amount.transition(std::time::Instant::now(), |current| {
+           *current = if value { 1.0 } else { 0.0 }
+        });
     }
 }
 
@@ -318,6 +317,7 @@ where
     ) {
         let checked_amount = self.state.checked_amount.timed_progress();
         let hovered_amount = self.state.hovered_amount.timed_progress();
+        dbg!(checked_amount);
 
         let mut children = layout.children();
 
