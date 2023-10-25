@@ -20,7 +20,7 @@ use crate::text_input::{self, TextInput};
 use crate::toggler::{self, Toggler};
 use crate::tooltip::{self, Tooltip};
 use crate::{Column, MouseArea, Row, Space, VerticalSlider};
-use crate::style::animation::AnimatedValue;
+use crate::style::animation::Animation;
 
 use std::borrow::Cow;
 use std::ops::RangeInclusive;

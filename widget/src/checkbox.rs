@@ -12,7 +12,7 @@ use crate::core::{
     Clipboard, Element, Layout, Length, Pixels, Rectangle, Shell, Size, Widget,
 };
 
-use iced_style::animation::{Animatable, AnimatedValue, Interpolable};
+use iced_style::animation::{Animatable, Animation, Interpolable};
 pub use iced_style::checkbox::{Appearance, StyleSheet};
 
 /// A box that can be checked.
@@ -54,9 +54,9 @@ where
 }
 #[derive(Debug, Clone, Copy)]
     pub checked: bool,
-    pub checked_amount: AnimatedValue<std::time::Instant>,
+    pub checked_amount: Animation<std::time::Instant, f32>,
     pub hovered: bool,
-    pub hovered_amount: AnimatedValue<std::time::Instant>,
+    pub hovered_amount: Animation<std::time::Instant, f32>,
         self.checked = value;
         self.checked_amount
             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
@@ -65,13 +65,13 @@ where
         self.hovered_amount
             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
             checked: is_checked,
-            checked_amount: AnimatedValue::new(if is_checked {
+            checked_amount: Animation::new(if is_checked {
                 1.0
             } else {
                 0.0
             }),
             hovered: is_hovered,
-            hovered_amount: AnimatedValue::new(if is_hovered {
+            hovered_amount: Animation::new(if is_hovered {
                 1.0
             } else {
                 0.0
