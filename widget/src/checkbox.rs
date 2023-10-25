@@ -99,7 +99,9 @@ impl CheckboxState {
 
 impl Animatable for CheckboxState {
     fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
-        self.checked_amount.tick(now) || self.hovered_amount.tick(now)
+        let check_redraw = self.checked_amount.tick(now);
+        let hover_redraw = self.hovered_amount.tick(now);
+        check_redraw || hover_redraw
     }
 }
 
@@ -325,6 +327,7 @@ where
     ) {
         let checked_amount = self.state.checked_amount.timed_progress();
         let hovered_amount = self.state.hovered_amount.timed_progress();
+        dbg!(hovered_amount);
 
         let mut children = layout.children();
 
@@ -336,7 +339,6 @@ where
             .interpolated(theme.hovered(&self.style, true), checked_amount);
         let interpolated_style = checked_interpolated
             .interpolated(hovered_interpolated, hovered_amount);
-        dbg!(interpolated_style.icon_color);
 
         {
             let layout = children.next().unwrap();

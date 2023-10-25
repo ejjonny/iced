@@ -99,9 +99,9 @@ impl Application for Example {
         )
         .animation(|anim| {
             anim.checked_amount.duration_ms = 1000.0;
-            anim.checked_amount.timing = animation::Timing::EaseOut;
+            anim.checked_amount.timing = animation::Timing::EaseOutQuint;
             anim.hovered_amount.duration_ms = 200.0;
-            anim.hovered_amount.timing = animation::Timing::EaseInOut;
+            anim.hovered_amount.timing = animation::Timing::EaseOutQuint;
         });
 
         let content = column![animating].spacing(22);
