@@ -17,7 +17,7 @@ use crate::core::{
 use crate::{Row, Text};
 
 use iced_renderer::core::{window, Background, BorderRadius};
-use iced_style::animation::{Interpolable, AnimatedValue, Animatable};
+use iced_style::animation::{Animatable, AnimatedValue, Interpolable};
 pub use iced_style::checkbox::{Appearance, StyleSheet};
 
 /// A box that can be checked.
@@ -67,31 +67,38 @@ pub struct CheckboxState {
 
 impl CheckboxState {
     pub fn check(&mut self, value: bool) {
-        self.checked_amount.transition(std::time::Instant::now(), |current| {
-           *current = if value { 1.0 } else { 0.0 }
-        });
+        self.checked_amount
+            .transition(std::time::Instant::now(), |current| {
+                *current = if value { 1.0 } else { 0.0 }
+            });
     }
     pub fn hover(&mut self, value: bool) {
-        self.hovered_amount.transition(std::time::Instant::now(), |current| {
-           *current = if value { 1.0 } else { 0.0 }
-        });
+        self.hovered_amount
+            .transition(std::time::Instant::now(), |current| {
+                *current = if value { 1.0 } else { 0.0 }
+            });
     }
 }
 
 impl CheckboxState {
     pub fn new(is_checked: bool, is_hovered: bool) -> Self {
         Self {
-            checked_amount: AnimatedValue::new(if is_checked { 1.0 } else { 0.0 }),
-            hovered_amount: AnimatedValue::new(if is_hovered { 1.0 } else { 0.0 }),
+            checked_amount: AnimatedValue::new(if is_checked {
+                1.0
+            } else {
+                0.0
+            }),
+            hovered_amount: AnimatedValue::new(if is_hovered {
+                1.0
+            } else {
+                0.0
+            }),
         }
     }
 }
 
 impl Animatable for CheckboxState {
-    fn on_redraw_request_update(
-        &mut self,
-        now: std::time::Instant,
-    ) -> bool {
+    fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
         self.checked_amount.tick(now) || self.hovered_amount.tick(now)
     }
 }
@@ -275,7 +282,8 @@ where
             }
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 let mouse_over = cursor.is_over(layout.bounds());
-                let currently_hovered = self.state.hovered_amount.real_value() == 1.0;
+                let currently_hovered =
+                    self.state.hovered_amount.real_value() == 1.0;
                 if mouse_over && !currently_hovered {
                     shell.publish((self.on_hover)(true));
                     shell.request_redraw(window::RedrawRequest::NextFrame);
@@ -317,15 +325,18 @@ where
     ) {
         let checked_amount = self.state.checked_amount.timed_progress();
         let hovered_amount = self.state.hovered_amount.timed_progress();
-        dbg!(checked_amount);
 
         let mut children = layout.children();
 
-        let checked_interpolated =
-            theme.active(&self.style, false).interpolated(theme.active(&self.style, true), checked_amount);
-        let hovered_interpolated =
-            theme.hovered(&self.style, false).interpolated(theme.hovered(&self.style, true), checked_amount);
-        let interpolated_style = checked_interpolated.interpolated(hovered_interpolated, hovered_amount);
+        let checked_interpolated = theme
+            .active(&self.style, false)
+            .interpolated(theme.active(&self.style, true), checked_amount);
+        let hovered_interpolated = theme
+            .hovered(&self.style, false)
+            .interpolated(theme.hovered(&self.style, true), checked_amount);
+        let interpolated_style = checked_interpolated
+            .interpolated(hovered_interpolated, hovered_amount);
+        dbg!(interpolated_style.icon_color);
 
         {
             let layout = children.next().unwrap();
@@ -350,23 +361,21 @@ where
             } = &self.icon;
             let size = size.unwrap_or(bounds.height * 0.7);
 
-            if checked_amount != 0.0 {
-                renderer.fill_text(text::Text {
-                    content: &code_point.to_string(),
-                    font: *font,
-                    size,
-                    line_height: *line_height,
-                    bounds: Rectangle {
-                        x: bounds.center_x(),
-                        y: bounds.center_y(),
-                        ..bounds
-                    },
-                    color: interpolated_style.icon_color,
-                    horizontal_alignment: alignment::Horizontal::Center,
-                    vertical_alignment: alignment::Vertical::Center,
-                    shaping: *shaping,
-                });
-            }
+            renderer.fill_text(text::Text {
+                content: &code_point.to_string(),
+                font: *font,
+                size,
+                line_height: *line_height,
+                bounds: Rectangle {
+                    x: bounds.center_x(),
+                    y: bounds.center_y(),
+                    ..bounds
+                },
+                color: interpolated_style.icon_color,
+                horizontal_alignment: alignment::Horizontal::Center,
+                vertical_alignment: alignment::Vertical::Center,
+                shaping: *shaping,
+            });
         }
 
         {

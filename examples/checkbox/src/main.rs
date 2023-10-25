@@ -99,8 +99,8 @@ impl Application for Example {
         )
         .animation(|anim| {
             anim.checked_amount.duration_ms = 1000.0;
-            anim.checked_amount.timing = animation::Timing::EaseInQuint;
-            anim.hovered_amount.duration_ms = 100.0;
+            anim.checked_amount.timing = animation::Timing::EaseOut;
+            anim.hovered_amount.duration_ms = 200.0;
             anim.hovered_amount.timing = animation::Timing::EaseInOut;
         });
 
