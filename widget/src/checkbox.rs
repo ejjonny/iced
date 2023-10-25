@@ -306,7 +306,6 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
-        dbg!(hovered_amount);
 
         let mut children = layout.children();
 
