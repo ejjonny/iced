@@ -1,6 +1,6 @@
 //! Helper functions to create pure widgets.
 use crate::button::{self, Button};
-use crate::checkbox::{self, Checkbox, CheckboxState};
+use crate::checkbox::{self, Checkbox};
 use crate::combo_box::{self, ComboBox};
 use crate::container::{self, Container};
 use crate::core;
@@ -140,15 +140,15 @@ where
 /// [`Checkbox`]: widget::Checkbox
 pub fn checkbox<'a, Message, Renderer>(
     label: impl Into<String>,
-    state: CheckboxState,
-    on_toggle: impl Fn(bool) -> Message + 'a,
+    checked_amount: f32,
+    on_toggle: impl Fn() -> Message + 'a,
     on_hover: impl Fn(bool) -> Message + 'a,
 ) -> Checkbox<'a, Message, Renderer>
 where
     Renderer: core::text::Renderer,
     Renderer::Theme: checkbox::StyleSheet + text::StyleSheet,
 {
-    Checkbox::new(label, state, on_toggle, on_hover)
+    Checkbox::new(label, checked_amount, on_toggle, on_hover)
 }
 
 /// Creates a new [`Radio`].

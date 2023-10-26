@@ -2,52 +2,47 @@ use crate::core::event::{self, Event};
 use crate::core::layout;
 use crate::core::mouse;
 use crate::core::renderer;
-use crate::core::window;
 use crate::core::widget::Tree;
+use crate::core::window;
 use crate::core::{
-    Clipboard, Element, Layout, Length, Rectangle,
-    Shell, Widget,
+    Clipboard, Element, Layout, Length, Rectangle, Shell, Widget,
 };
-use iced_style::animation::{Animation, Interpolable, Timing, Animatable};
+use iced_renderer::core::widget::tree::State;
+use iced_style::animation::{Timing, AnimatableValue, Animation};
 
 pub struct Animating<'a, Message, T, Renderer = crate::Renderer>
 where
-    T: Animatable,
+    T: AnimatableValue,
 {
-    child: Element<'a, Message, Renderer>,
-    animation: T,
-    animation_update: Box<dyn Fn(T) -> Message + 'a>,
+    child: Box<dyn Fn(T) -> Element<'a, Message, Renderer>>,
+    animated_value: T,
+    duration: std::time::Duration,
+    timing: Timing,
 }
 
 impl<'a, Message, T, Renderer> Animating<'a, Message, T, Renderer>
 where
-    T: Animatable + Clone,
+    T: AnimatableValue,
 {
-    pub fn new<F>(
-        child: Element<'a, Message, Renderer>,
-        animation: T,
-        animation_update: F,
-    ) -> Self
-    where
-        F: 'a + Fn(T) -> Message,
-    {
+    pub fn new<Content>(
+        child: Content,
+        animated_value: T,
+        duration: std::time::Duration,
+        timing: Timing,
+    ) -> Self where Content: Fn(T) -> Element<'a, Message, Renderer> + 'static {
         Animating {
-            child,
-            animation,
-            animation_update: Box::new(animation_update),
+            child: Box::new(child),
+            animated_value,
+            duration,
+            timing,
         }
-    }
-
-    pub fn animation(mut self, mut configuration: impl FnMut(&mut T)) -> Self {
-        configuration(&mut self.animation);
-        self
     }
 }
 
-impl<'a, Message, T, Renderer> Widget<Message, Renderer>
+impl<'a, 'b, Message, T, Renderer> Widget<Message, Renderer>
     for Animating<'a, Message, T, Renderer>
 where
-    T: Animatable + Copy,
+    T: AnimatableValue + Clone + 'static,
     Renderer: crate::core::Renderer,
 {
     fn draw(
@@ -60,7 +55,11 @@ where
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        self.child
+        let animation = state
+            .state
+            .downcast_ref::<Animation<std::time::Instant, T>>()
+            .timed_progress();
+        (self.child)(animation)
             .as_widget()
             .draw(state, renderer, theme, style, layout, cursor, viewport)
     }
@@ -72,7 +71,7 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        self.child
+        (self.child)(self.animated_value.clone())
             .as_widget()
             .mouse_interaction(state, layout, cursor, viewport, renderer)
     }
@@ -89,19 +88,39 @@ where
     ) -> event::Status {
         match event {
             Event::Window(window::Event::RedrawRequested(now)) => {
-                if self.animation.on_redraw_request_update(now) {
-                    shell.request_redraw(window::RedrawRequest::NextFrame);
-                    shell.publish((self.animation_update)(self.animation))
+                let state = tree
+                    .state
+                    .downcast_mut::<Animation<std::time::Instant, T>>();
+                match &state.animation_state {
+                    Some(animation) => {
+                        if animation.destination != self.animated_value {
+                            state.transition(self.animated_value.clone(), now);
+                        }
+                    }
+                    _ => {
+                        if state.position != self.animated_value {
+                            state.transition(self.animated_value.clone(), now)
+                        }
+                    }
+                }
+                if state.animating() {
+                    let needs_redraw = state.tick(now);
+                    if needs_redraw {
+                        shell.request_redraw(
+                            window::RedrawRequest::NextFrame,
+                        );
+                    }
                 }
             }
             _ => {}
         }
+        let animated_value = self.animated_value.clone();
         std::iter::once(self)
             .into_iter()
             .zip(&mut tree.children)
             .zip(layout.children())
             .map(|((animating, state), layout)| {
-                animating.child.as_widget_mut().on_event(
+                (animating.child)(animated_value.clone()).as_widget_mut().on_event(
                     state,
                     event.clone(),
                     layout,
@@ -121,25 +140,33 @@ where
         renderer: &Renderer,
         operation: &mut dyn iced_renderer::core::widget::Operation<Message>,
     ) {
-        self.child
+        (self.child)(self.animated_value.clone())
             .as_widget()
             .operate(state, layout, renderer, operation)
+    }
+    fn state(&self) -> State {
+        let animation = Animation::<std::time::Instant, T>::new(
+            self.animated_value.clone(),
+            self.duration.as_millis() as f32,
+            self.timing,
+        );
+        State::new(animation)
     }
     fn layout(
         &self,
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        self.child.as_widget().layout(renderer, limits)
+        (self.child)(self.animated_value.clone()).as_widget().layout(renderer, limits)
     }
     fn width(&self) -> Length {
-        self.child.as_widget().width()
+        (self.child)(self.animated_value.clone()).as_widget().width()
     }
     fn height(&self) -> Length {
-        self.child.as_widget().height()
+        (self.child)(self.animated_value.clone()).as_widget().height()
     }
     fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&self.child)]
+        vec![Tree::new(&(self.child)(self.animated_value.clone()))]
     }
 }
 
@@ -147,7 +174,7 @@ impl<'a, Message, T, Renderer> From<Animating<'a, Message, T, Renderer>>
     for Element<'a, Message, Renderer>
 where
     Message: 'a,
-    T: Animatable + Copy + 'a,
+    T: AnimatableValue + Copy + 'static,
     Renderer: crate::core::Renderer + 'a,
 {
     fn from(animating: Animating<'a, Message, T, Renderer>) -> Self {
