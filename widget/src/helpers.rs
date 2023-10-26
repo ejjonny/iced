@@ -149,14 +149,14 @@ where
 /// [`Checkbox`]: crate::Checkbox
 pub fn checkbox<'a, Message, Renderer>(
     label: impl Into<String>,
-    state: CheckboxState,
-    f: impl Fn(bool) -> Message + 'a,
+    checked_amount: f32,
+    on_toggle: impl Fn() -> Message + 'a,
 ) -> Checkbox<'a, Message, Renderer>
 where
     Renderer: core::text::Renderer,
     Renderer::Theme: checkbox::StyleSheet + text::StyleSheet,
 {
-    Checkbox::new(label, is_checked, f)
+    Checkbox::new(label, checked_amount, on_toggle, on_hover)
 }
 
 /// Creates a new [`Radio`].

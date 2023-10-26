@@ -12,7 +12,7 @@ use crate::core::{
     Clipboard, Element, Layout, Length, Pixels, Rectangle, Shell, Size, Widget,
 };
 
-use iced_style::animation::{Animatable, Animation, Interpolable};
+use iced_style::animation::{Animation, Interpolable};
 pub use iced_style::checkbox::{Appearance, StyleSheet};
 
 /// A box that can be checked.
@@ -39,8 +39,8 @@ where
     Renderer: text::Renderer,
     Renderer::Theme: StyleSheet + crate::text::StyleSheet,
 {
-    is_checked: bool,
-    on_toggle: Box<dyn Fn(bool) -> Message + 'a>,
+    checked_amount: f32,
+    on_toggle: Box<dyn Fn() -> Message + 'a>,
     label: String,
     width: Length,
     size: f32,
@@ -52,34 +52,50 @@ where
     icon: Icon<Renderer::Font>,
     style: <Renderer::Theme as StyleSheet>::Style,
 }
-#[derive(Debug, Clone, Copy)]
-    pub checked: bool,
-    pub checked_amount: Animation<std::time::Instant, f32>,
-    pub hovered: bool,
-    pub hovered_amount: Animation<std::time::Instant, f32>,
-        self.checked = value;
-        self.checked_amount
-            .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
-    pub fn hover(&mut self, value: bool) {
-        self.hovered = value;
-        self.hovered_amount
-            .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
-            checked: is_checked,
-            checked_amount: Animation::new(if is_checked {
-                1.0
-            } else {
-                0.0
-            }),
-            hovered: is_hovered,
-            hovered_amount: Animation::new(if is_hovered {
-                1.0
-            } else {
-                0.0
-            }),
-    fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
-        let check_redraw = self.checked_amount.tick(now);
-        let hover_redraw = self.hovered_amount.tick(now);
-        check_redraw || hover_redraw
+// #[derive(Debug, Clone, Copy)]
+// pub struct CheckboxState {
+//     pub checked: bool,
+//     pub checked_amount: Animation<std::time::Instant, f32>,
+//     pub hovered: bool,
+//     pub hovered_amount: Animation<std::time::Instant, f32>,
+// }
+// impl CheckboxState {
+//     pub fn check(&mut self, value: bool) {
+//         self.checked = value;
+//         self.checked_amount
+//             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
+//     }
+//     pub fn hover(&mut self, value: bool) {
+//         self.hovered = value;
+//         self.hovered_amount
+//             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
+//     }
+// }
+// impl CheckboxState {
+//     pub fn new(is_checked: bool, is_hovered: bool) -> Self {
+//         Self {
+//             checked: is_checked,
+//             checked_amount: Animation::new(if is_checked {
+//                 1.0
+//             } else {
+//                 0.0
+//             }),
+//             hovered: is_hovered,
+//             hovered_amount: Animation::new(if is_hovered {
+//                 1.0
+//             } else {
+//                 0.0
+//             }),
+//         }
+//     }
+// }
+// impl Animatable for CheckboxState {
+//     fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
+//         let check_redraw = self.checked_amount.tick(now);
+//         let hover_redraw = self.hovered_amount.tick(now);
+//         check_redraw || hover_redraw
+//     }
+// }
 
 impl<'a, Message, Renderer> Checkbox<'a, Message, Renderer>
 where
@@ -101,11 +117,12 @@ where
     ///     will receive the new state of the [`Checkbox`] and must produce a
     ///     `Message`.
     pub fn new<F>(label: impl Into<String>, is_checked: bool, f: F) -> Self
+        checked_amount: f32,
     where
-        F: 'a + Fn(bool) -> Message,
+        F: 'a + Fn() -> Message,
     {
         Checkbox {
-            is_checked,
+            checked_amount,
             on_toggle: Box::new(f),
             label: label.into(),
             width: Length::Shrink,
@@ -261,22 +278,22 @@ where
                 let mouse_over = cursor.is_over(layout.bounds());
 
                 if mouse_over {
-                    shell.publish((self.on_toggle)(!self.is_checked));
-                        !(self.state.checked),
+                    shell.publish((self.on_toggle)());
                     return event::Status::Captured;
                 }
             }
-            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                let mouse_over = cursor.is_over(layout.bounds());
-                let currently_hovered =
-                    self.state.hovered;
-                if mouse_over && !currently_hovered {
-                    shell.publish((self.on_hover)(true));
-                    shell.request_redraw(window::RedrawRequest::NextFrame);
-                } else if !mouse_over && currently_hovered {
-                    shell.publish((self.on_hover)(false));
-                    shell.request_redraw(window::RedrawRequest::NextFrame);
-                }
+            // Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+            //     let mouse_over = cursor.is_over(layout.bounds());
+            //     let currently_hovered =
+            //         self.state.hovered;
+            //     if mouse_over && !currently_hovered {
+            //         shell.publish((self.on_hover)(true));
+            //         shell.request_redraw(window::RedrawRequest::NextFrame);
+            //     } else if !mouse_over && currently_hovered {
+            //         shell.publish((self.on_hover)(false));
+            //         shell.request_redraw(window::RedrawRequest::NextFrame);
+            //     }
+            // }
             _ => {}
         }
 
@@ -308,6 +325,8 @@ where
         cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
+        let checked_amount = self.checked_amount;
+        let hovered_amount = 0.0;
 
         let mut children = layout.children();
 
