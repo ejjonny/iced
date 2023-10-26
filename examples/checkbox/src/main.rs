@@ -1,8 +1,8 @@
-use iced::animation::{self, Animation, Timing};
+use iced::animation::{self, Animation, Timing, Interpolable};
 use iced::executor;
 use iced::font::{self, Font};
 use iced::theme::Checkbox;
-use iced::widget::animated::Animating;
+use iced::widget::animated::{Animator, AnimatableConvertible};
 use iced::widget::checkbox::{Appearance};
 use iced::widget::{checkbox, column, container, text};
 use iced::{Application, Command, Element, Length, Settings, Theme};
@@ -83,11 +83,10 @@ impl Application for Example {
         //     shaping: text::Shaping::Basic,
         // })
         // .style(Checkbox::Success);
-        let animating = Animating::new(
-            |animated| {
+        let animating = Animator::new( |checked| {
                 checkbox(
                     "Custom",
-                    animated,
+                    checked,
                     || { Message::Checked },
                     Message::Hovered,
                 )
@@ -98,10 +97,9 @@ impl Application for Example {
                     line_height: text::LineHeight::Relative(1.0),
                     shaping: text::Shaping::Basic,
                 })
-                .style(Checkbox::Success)
                 .into()
             },
-            if self.checked { 1.0 } else { 0.0 },
+            self.checked.animatable(),
             std::time::Duration::from_millis(500),
             Timing::EaseOutQuint,
         );

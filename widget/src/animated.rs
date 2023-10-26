@@ -10,7 +10,7 @@ use crate::core::{
 use iced_renderer::core::widget::tree::State;
 use iced_style::animation::{Timing, AnimatableValue, Animation};
 
-pub struct Animating<'a, Message, T, Renderer = crate::Renderer>
+pub struct Animator<'a, Message, T, Renderer = crate::Renderer>
 where
     T: AnimatableValue,
 {
@@ -20,7 +20,17 @@ where
     timing: Timing,
 }
 
-impl<'a, Message, T, Renderer> Animating<'a, Message, T, Renderer>
+pub trait AnimatableConvertible<T> where T: AnimatableValue {
+    fn animatable(self) -> T;
+}
+
+impl AnimatableConvertible<f32> for bool {
+    fn animatable(self) -> f32 {
+        if self { 1.0 } else { 0.0 }
+    }
+}
+
+impl<'a, Message, T, Renderer> Animator<'a, Message, T, Renderer>
 where
     T: AnimatableValue,
 {
@@ -30,7 +40,7 @@ where
         duration: std::time::Duration,
         timing: Timing,
     ) -> Self where Content: Fn(T) -> Element<'a, Message, Renderer> + 'static {
-        Animating {
+        Animator {
             child: Box::new(child),
             animated_value,
             duration,
@@ -40,7 +50,7 @@ where
 }
 
 impl<'a, 'b, Message, T, Renderer> Widget<Message, Renderer>
-    for Animating<'a, Message, T, Renderer>
+    for Animator<'a, Message, T, Renderer>
 where
     T: AnimatableValue + Clone + 'static,
     Renderer: crate::core::Renderer,
@@ -170,14 +180,14 @@ where
     }
 }
 
-impl<'a, Message, T, Renderer> From<Animating<'a, Message, T, Renderer>>
+impl<'a, Message, T, Renderer> From<Animator<'a, Message, T, Renderer>>
     for Element<'a, Message, Renderer>
 where
     Message: 'a,
     T: AnimatableValue + Copy + 'static,
     Renderer: crate::core::Renderer + 'a,
 {
-    fn from(animating: Animating<'a, Message, T, Renderer>) -> Self {
+    fn from(animating: Animator<'a, Message, T, Renderer>) -> Self {
         Self::new(animating)
     }
 }
