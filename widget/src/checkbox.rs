@@ -39,7 +39,9 @@ where
     Renderer: text::Renderer,
     Renderer::Theme: StyleSheet + crate::text::StyleSheet,
 {
+    hovered: bool,
     checked_amount: f32,
+    hovered_amount: f32,
     on_toggle: Box<dyn Fn() -> Message + 'a>,
     on_hover: Box<dyn Fn(bool) -> Message + 'a>,
     label: String,
@@ -74,7 +76,9 @@ where
     ///     `Message`.
     pub fn new<F, G>(
         label: impl Into<String>,
+        hovered: bool,
         checked_amount: f32,
+        hovered_amount: f32,
         on_toggle: F,
         on_hover: G,
     ) -> Self
@@ -83,7 +87,9 @@ where
         G: 'a + Fn(bool) -> Message,
     {
         Checkbox {
+            hovered,
             checked_amount,
+            hovered_amount,
             on_toggle: Box::new(on_toggle),
             on_hover: Box::new(on_hover),
             label: label.into(),
@@ -244,18 +250,13 @@ where
                     return event::Status::Captured;
                 }
             }
-            // Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-            //     let mouse_over = cursor.is_over(layout.bounds());
-            //     let currently_hovered =
-            //         self.state.hovered;
-            //     if mouse_over && !currently_hovered {
-            //         shell.publish((self.on_hover)(true));
-            //         shell.request_redraw(window::RedrawRequest::NextFrame);
-            //     } else if !mouse_over && currently_hovered {
-            //         shell.publish((self.on_hover)(false));
-            //         shell.request_redraw(window::RedrawRequest::NextFrame);
-            //     }
-            // }
+            Event::Mouse(mouse::Event::CursorMoved { .. }) => {
+                let mouse_over = cursor.is_over(layout.bounds());
+                let currently_hovered = self.hovered;
+                if mouse_over != currently_hovered {
+                    shell.publish((self.on_hover)(mouse_over));
+                }
+            }
             _ => {}
         }
 
@@ -288,7 +289,7 @@ where
         _viewport: &Rectangle,
     ) {
         let checked_amount = self.checked_amount;
-        let hovered_amount = 0.0;
+        let hovered_amount = self.hovered_amount;
 
         let mut children = layout.children();
 
@@ -323,6 +324,35 @@ where
                 shaping,
             } = &self.icon;
             let size = size.unwrap_or(Pixels(bounds.height * 0.7));
+
+            renderer.fill_text(
+                text::Text {
+                    content: &code_point.to_string(),
+                    font: *font,
+                    size,
+                    line_height: *line_height,
+                    bounds: bounds.size(),
+                    horizontal_alignment: alignment::Horizontal::Center,
+                    vertical_alignment: alignment::Vertical::Center,
+                    shaping: *shaping,
+                },
+                bounds.center(),
+                interpolated_style.icon_color,
+            );
+        }
+
+        {
+            let label_layout = children.next().unwrap();
+
+            crate::text::draw(
+                renderer,
+                style,
+                label_layout,
+                tree.state.downcast_ref(),
+                crate::text::Appearance {
+                    color: interpolated_style.text_color,
+                },
+            );
         }
     }
 }

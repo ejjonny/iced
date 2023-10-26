@@ -28,6 +28,27 @@ impl AnimatableValue for Vec<f32> {
         self.scale(1.0 / magnitude)
     }
 }
+impl AnimatableValue for (f32, f32) {
+    fn distance(&self, other: &Self) -> f32 {
+        self.diff(other).magnitude()
+    }
+    fn diff(&self, other: &Self) -> Self {
+        (self.0 - other.0, self.1 - other.1)
+    }
+    fn sum(&self, other: &Self) -> Self {
+        (self.0 + other.0, self.1 + other.1)
+    }
+    fn scale(&self, amount: f32) -> Self {
+        (self.0 * amount, self.1 * amount)
+    }
+    fn magnitude(&self) -> f32 {
+        f32::sqrt(vec![self.0, self.1].iter().map(|v| f32::powf(*v, 2.0)).sum())
+    }
+    fn normalized(&self) -> Self {
+        let magnitude = self.magnitude();
+        self.scale(1.0 / magnitude)
+    }
+}
 impl AnimatableValue for f32 {
     fn distance(&self, other: &Self) -> f32 {
         self.diff(other).magnitude()

@@ -7,54 +7,74 @@ use crate::core::window;
 use crate::core::{
     Clipboard, Element, Layout, Length, Rectangle, Shell, Widget,
 };
+use iced_renderer::core::widget;
 use iced_renderer::core::widget::tree::State;
-use iced_style::animation::{Timing, AnimatableValue, Animation};
+use iced_style::animation::{AnimatableValue, Animation, Timing};
 
-pub struct Animator<'a, Message, T, Renderer = crate::Renderer>
+pub struct Animator<'a, Message, T, U, Renderer = crate::Renderer>
 where
     T: AnimatableValue,
+    U: Copy,
 {
-    child: Box<dyn Fn(T) -> Element<'a, Message, Renderer>>,
+    child: Box<dyn Fn(T, U) -> Element<'a, Message, Renderer>>,
     animated_value: T,
+    other_value: U,
     duration: std::time::Duration,
     timing: Timing,
 }
 
-pub trait AnimatableConvertible<T> where T: AnimatableValue {
+pub trait AnimatableConvertible<T>
+where
+    T: AnimatableValue,
+{
     fn animatable(self) -> T;
 }
 
 impl AnimatableConvertible<f32> for bool {
     fn animatable(self) -> f32 {
-        if self { 1.0 } else { 0.0 }
+        if self {
+            1.0
+        } else {
+            0.0
+        }
     }
 }
 
-impl<'a, Message, T, Renderer> Animator<'a, Message, T, Renderer>
+impl<'a, Message, T, U, Renderer> Animator<'a, Message, T, U, Renderer>
 where
     T: AnimatableValue,
+    U: Copy,
 {
     pub fn new<Content>(
-        child: Content,
         animated_value: T,
+        other_value: U,
         duration: std::time::Duration,
         timing: Timing,
-    ) -> Self where Content: Fn(T) -> Element<'a, Message, Renderer> + 'static {
+        child: Content,
+    ) -> Self
+    where
+        Content: Fn(T, U) -> Element<'a, Message, Renderer> + 'static,
+    {
         Animator {
             child: Box::new(child),
             animated_value,
+            other_value,
             duration,
             timing,
         }
     }
 }
 
-impl<'a, 'b, Message, T, Renderer> Widget<Message, Renderer>
-    for Animator<'a, Message, T, Renderer>
+impl<'a, 'b, Message, T, U, Renderer> Widget<Message, Renderer>
+    for Animator<'a, Message, T, U, Renderer>
 where
     T: AnimatableValue + Clone + 'static,
+    U: Copy,
     Renderer: crate::core::Renderer,
 {
+    fn tag(&self) -> iced_renderer::core::widget::tree::Tag {
+        widget::tree::Tag::of::<Animation<std::time::Instant, T>>()
+    }
     fn draw(
         &self,
         state: &Tree,
@@ -69,9 +89,15 @@ where
             .state
             .downcast_ref::<Animation<std::time::Instant, T>>()
             .timed_progress();
-        (self.child)(animation)
-            .as_widget()
-            .draw(state, renderer, theme, style, layout, cursor, viewport)
+        (self.child)(animation, self.other_value).as_widget().draw(
+            &state.children[0],
+            renderer,
+            theme,
+            style,
+            layout,
+            cursor,
+            viewport,
+        )
     }
     fn mouse_interaction(
         &self,
@@ -81,7 +107,11 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        (self.child)(self.animated_value.clone())
+        let animation = state
+            .state
+            .downcast_ref::<Animation<std::time::Instant, T>>()
+            .timed_progress();
+        (self.child)(animation, self.other_value)
             .as_widget()
             .mouse_interaction(state, layout, cursor, viewport, renderer)
     }
@@ -96,52 +126,46 @@ where
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) -> event::Status {
+        let animation = tree
+            .state
+            .downcast_mut::<Animation<std::time::Instant, T>>();
         match event {
             Event::Window(window::Event::RedrawRequested(now)) => {
-                let state = tree
-                    .state
-                    .downcast_mut::<Animation<std::time::Instant, T>>();
-                match &state.animation_state {
-                    Some(animation) => {
-                        if animation.destination != self.animated_value {
-                            state.transition(self.animated_value.clone(), now);
+                match &animation.animation_state {
+                    Some(animation_state) => {
+                        if animation_state.destination != self.animated_value {
+                            animation
+                                .transition(self.animated_value.clone(), now);
                         }
                     }
                     _ => {
-                        if state.position != self.animated_value {
-                            state.transition(self.animated_value.clone(), now)
+                        if animation.position != self.animated_value {
+                            animation
+                                .transition(self.animated_value.clone(), now)
                         }
                     }
                 }
-                if state.animating() {
-                    let needs_redraw = state.tick(now);
+                if animation.animating() {
+                    let needs_redraw = animation.tick(now);
                     if needs_redraw {
-                        shell.request_redraw(
-                            window::RedrawRequest::NextFrame,
-                        );
+                        shell.request_redraw(window::RedrawRequest::NextFrame);
                     }
                 }
             }
             _ => {}
         }
-        let animated_value = self.animated_value.clone();
-        std::iter::once(self)
-            .into_iter()
-            .zip(&mut tree.children)
-            .zip(layout.children())
-            .map(|((animating, state), layout)| {
-                (animating.child)(animated_value.clone()).as_widget_mut().on_event(
-                    state,
-                    event.clone(),
-                    layout,
-                    cursor,
-                    renderer,
-                    clipboard,
-                    shell,
-                    viewport,
-                )
-            })
-            .fold(event::Status::Ignored, event::Status::merge)
+        (self.child)(animation.timed_progress(), self.other_value)
+            .as_widget_mut()
+            .on_event(
+                &mut tree.children[0],
+                event,
+                layout,
+                cursor,
+                renderer,
+                clipboard,
+                shell,
+                viewport,
+            )
     }
     fn operate(
         &self,
@@ -150,7 +174,11 @@ where
         renderer: &Renderer,
         operation: &mut dyn iced_renderer::core::widget::Operation<Message>,
     ) {
-        (self.child)(self.animated_value.clone())
+        let animation = state
+            .state
+            .downcast_ref::<Animation<std::time::Instant, T>>()
+            .timed_progress();
+        (self.child)(animation, self.other_value)
             .as_widget()
             .operate(state, layout, renderer, operation)
     }
@@ -168,27 +196,47 @@ where
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        (self.child)(self.animated_value.clone()).as_widget().layout(tree, renderer, limits)
+        let animation = tree
+            .state
+            .downcast_ref::<Animation<std::time::Instant, T>>()
+            .timed_progress();
+        (self.child)(animation, self.other_value).as_widget().layout(
+            &mut tree.children[0],
+            renderer,
+            limits,
+        )
     }
     fn width(&self) -> Length {
-        (self.child)(self.animated_value.clone()).as_widget().width()
+        (self.child)(self.animated_value.clone(), self.other_value)
+            .as_widget()
+            .width()
     }
     fn height(&self) -> Length {
-        (self.child)(self.animated_value.clone()).as_widget().height()
+        (self.child)(self.animated_value.clone(), self.other_value)
+            .as_widget()
+            .height()
+    }
+    fn diff(&self, tree: &mut Tree) {
+        let animation = tree
+            .state
+            .downcast_ref::<Animation<std::time::Instant, T>>()
+            .timed_progress();
+        tree.diff_children(&vec![(self.child)(animation, self.other_value)]);
     }
     fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&(self.child)(self.animated_value.clone()))]
+        vec![Tree::new((self.child)(self.animated_value.clone(), self.other_value))]
     }
 }
 
-impl<'a, Message, T, Renderer> From<Animator<'a, Message, T, Renderer>>
+impl<'a, Message, T, U, Renderer> From<Animator<'a, Message, T, U, Renderer>>
     for Element<'a, Message, Renderer>
 where
     Message: 'a,
     T: AnimatableValue + Copy + 'static,
+    U: Copy + 'static,
     Renderer: crate::core::Renderer + 'a,
 {
-    fn from(animating: Animator<'a, Message, T, Renderer>) -> Self {
+    fn from(animating: Animator<'a, Message, T, U, Renderer>) -> Self {
         Self::new(animating)
     }
 }

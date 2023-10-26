@@ -81,26 +81,28 @@ impl Application for Example {
         //     shaping: text::Shaping::Basic,
         // })
         // .style(Checkbox::Success);
-        let animating = Animator::new( |checked| {
-                checkbox(
-                    "Custom",
-                    checked,
-                    || { Message::Checked },
-                    Message::Hovered,
-                )
-                .icon(checkbox::Icon {
-                    font: ICON_FONT,
-                    code_point: '\u{e901}',
-                    size: None,
-                    line_height: text::LineHeight::Relative(1.0),
-                    shaping: text::Shaping::Basic,
-                })
-                .into()
-            },
-            self.checked.animatable(),
-            std::time::Duration::from_millis(500),
-            Timing::EaseOutQuint,
-        );
+        let checkbox = checkbox(
+            "Custom",
+            false,
+            1.0,
+            1.0,
+            || { Message::Checked },
+            Message::Hovered,
+        )
+        .icon(checkbox::Icon {
+            font: ICON_FONT,
+            code_point: '\u{e901}',
+            size: None,
+            line_height: text::LineHeight::Relative(1.0),
+            shaping: text::Shaping::Basic,
+        });
+        // let animating = Animator::new( |checked| {
+
+        //     },
+        //     self.checked.animatable(),
+        //     std::time::Duration::from_millis(500),
+        //     Timing::EaseOutQuint,
+        // );
         // let animating = Animating::new(
         //     Element::from(custom_checkbox),
         //     if self.default_checkbox { 1.0 } else { 0.0 },
@@ -113,7 +115,7 @@ impl Application for Example {
         //     anim.hovered_amount.timing = animation::Timing::EaseOutQuint;
         // });
 
-        let content = column![animating].spacing(22);
+        let content = column![checkbox].spacing(22);
 
         container(content)
             .width(Length::Fill)
