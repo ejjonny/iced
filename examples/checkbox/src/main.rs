@@ -30,6 +30,7 @@ impl Default for Example {
 #[derive(Debug, Clone, Copy)]
 enum Message {
     Checked,
+    Hovered(bool),
     FontLoaded(Result<(), font::Error>),
 }
 
@@ -55,7 +56,8 @@ impl Application for Example {
         match message {
             Message::Checked => {
                 self.checked = !self.checked;
-                // self.custom_checkbox.hover(value);
+            }
+            Message::Hovered(_) => (),
             Message::FontLoaded(_) => (),
         }
 
@@ -63,8 +65,8 @@ impl Application for Example {
     }
 
     fn view(&self) -> Element<Message> {
-        let default_checkbox =
-            checkbox("Default", self.default_checkbox, Message::DefaultChecked);
+        // let default_checkbox =
+        //     checkbox("Default", self.default_checkbox, Message::Checked);
         // let custom_checkbox = checkbox(
         //     "Custom",
         //     self.checked,
@@ -111,7 +113,7 @@ impl Application for Example {
         //     anim.hovered_amount.timing = animation::Timing::EaseOutQuint;
         // });
 
-        let content = column![default_checkbox, custom_checkbox].spacing(22);
+        let content = column![animating].spacing(22);
 
         container(content)
             .width(Length::Fill)

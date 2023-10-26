@@ -164,10 +164,11 @@ where
     }
     fn layout(
         &self,
+        tree: &mut Tree,
         renderer: &Renderer,
         limits: &layout::Limits,
     ) -> layout::Node {
-        (self.child)(self.animated_value.clone()).as_widget().layout(renderer, limits)
+        (self.child)(self.animated_value.clone()).as_widget().layout(tree, renderer, limits)
     }
     fn width(&self) -> Length {
         (self.child)(self.animated_value.clone()).as_widget().width()

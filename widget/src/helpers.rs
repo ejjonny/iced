@@ -151,6 +151,7 @@ pub fn checkbox<'a, Message, Renderer>(
     label: impl Into<String>,
     checked_amount: f32,
     on_toggle: impl Fn() -> Message + 'a,
+    on_hover: impl Fn(bool) -> Message + 'a,
 ) -> Checkbox<'a, Message, Renderer>
 where
     Renderer: core::text::Renderer,

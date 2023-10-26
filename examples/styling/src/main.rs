@@ -111,11 +111,11 @@ impl Sandbox for Styling {
         .width(Length::Fill)
         .height(100);
 
-        let checkbox = checkbox(
-            "Check me!",
-            self.checkbox_value,
-            Message::CheckboxToggled,
-        );
+        // let checkbox = checkbox(
+        //     "Check me!",
+        //     self.checkbox_value,
+        //     Message::CheckboxToggled,
+        // );
 
         let toggler = toggler(
             String::from("Toggle me!"),
@@ -136,7 +136,7 @@ impl Sandbox for Styling {
             row![
                 scrollable,
                 vertical_rule(38),
-                column![checkbox, toggler].spacing(20)
+                column![toggler].spacing(20)
             ]
             .spacing(10)
             .height(100)

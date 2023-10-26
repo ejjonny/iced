@@ -41,6 +41,7 @@ where
 {
     checked_amount: f32,
     on_toggle: Box<dyn Fn() -> Message + 'a>,
+    on_hover: Box<dyn Fn(bool) -> Message + 'a>,
     label: String,
     width: Length,
     size: f32,
@@ -71,14 +72,20 @@ where
     ///   * a function that will be called when the [`Checkbox`] is toggled. It
     ///     will receive the new state of the [`Checkbox`] and must produce a
     ///     `Message`.
-    pub fn new<F>(label: impl Into<String>, is_checked: bool, f: F) -> Self
+    pub fn new<F, G>(
+        label: impl Into<String>,
         checked_amount: f32,
+        on_toggle: F,
+        on_hover: G,
+    ) -> Self
     where
         F: 'a + Fn() -> Message,
+        G: 'a + Fn(bool) -> Message,
     {
         Checkbox {
             checked_amount,
-            on_toggle: Box::new(f),
+            on_toggle: Box::new(on_toggle),
+            on_hover: Box::new(on_hover),
             label: label.into(),
             width: Length::Shrink,
             size: Self::DEFAULT_SIZE,
@@ -301,11 +308,11 @@ where
             renderer.fill_quad(
                 renderer::Quad {
                     bounds,
-                    border_radius: custom_style.border_radius,
-                    border_width: custom_style.border_width,
-                    border_color: custom_style.border_color,
+                    border_radius: interpolated_style.border_radius,
+                    border_width: interpolated_style.border_width,
+                    border_color: interpolated_style.border_color,
                 },
-                custom_style.background,
+                interpolated_style.background,
             );
 
             let Icon {
@@ -316,40 +323,6 @@ where
                 shaping,
             } = &self.icon;
             let size = size.unwrap_or(Pixels(bounds.height * 0.7));
-
-            renderer.fill_text(text::Text {
-                    text::Text {
-                content: &code_point.to_string(),
-                font: *font,
-                size,
-                line_height: *line_height,
-                bounds: Rectangle {
-                    x: bounds.center_x(),
-                    y: bounds.center_y(),
-                    ..bounds
-                },
-                color: interpolated_style.icon_color,
-                horizontal_alignment: alignment::Horizontal::Center,
-                vertical_alignment: alignment::Vertical::Center,
-                shaping: *shaping,
-            });
-                    bounds.center(),
-                    custom_style.icon_color,
-                );
-        }
-
-        {
-            let label_layout = children.next().unwrap();
-
-            crate::text::draw(
-                renderer,
-                style,
-                label_layout,
-                tree.state.downcast_ref(),
-                crate::text::Appearance {
-                    color: custom_style.text_color,
-                },
-            );
         }
     }
 }

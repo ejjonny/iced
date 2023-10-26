@@ -51,16 +51,16 @@ impl Sandbox for Tiger {
             },
         );
 
-        let apply_color_filter = checkbox(
-            "Apply a color filter",
-            self.apply_color_filter,
-            Message::ToggleColorFilter,
-        );
+        // let apply_color_filter = checkbox(
+        //     "Apply a color filter",
+        //     self.apply_color_filter,
+        //     Message::ToggleColorFilter,
+        // );
 
         container(
             column![
                 svg,
-                container(apply_color_filter).width(Length::Fill).center_x()
+                // container(apply_color_filter).width(Length::Fill).center_x()
             ]
             .spacing(20)
             .width(Length::Fill)

@@ -591,16 +591,16 @@ impl<'a> Step {
             } else {
                 text_input
             })
-            .push(checkbox(
-                "Enable password mode",
-                is_secure,
-                StepMessage::ToggleSecureInput,
-            ))
-            .push(checkbox(
-                "Show icon",
-                is_showing_icon,
-                StepMessage::ToggleTextInputIcon,
-            ))
+            // .push(checkbox(
+            //     "Enable password mode",
+            //     is_secure,
+            //     StepMessage::ToggleSecureInput,
+            // ))
+            // .push(checkbox(
+            //     "Show icon",
+            //     is_showing_icon,
+            //     StepMessage::ToggleTextInputIcon,
+            // ))
             .push(
                 "A text input produces a message every time it changes. It is \
                  very easy to keep track of its contents:",
@@ -626,16 +626,16 @@ impl<'a> Step {
                 "Give it a shot! Check the following checkbox to be able to \
                  see element boundaries.",
             )
-            .push(if cfg!(target_arch = "wasm32") {
-                Element::new(
-                    text("Not available on web yet!")
-                        .style(Color::from([0.7, 0.7, 0.7]))
-                        .horizontal_alignment(alignment::Horizontal::Center),
-                )
-            } else {
-                checkbox("Explain layout", debug, StepMessage::DebugToggled)
-                    .into()
-            })
+            // .push(if cfg!(target_arch = "wasm32") {
+            //     Element::new(
+            //         text("Not available on web yet!")
+            //             .style(Color::from([0.7, 0.7, 0.7]))
+            //             .horizontal_alignment(alignment::Horizontal::Center),
+            //     )
+            // } else {
+            //     checkbox("Explain layout", debug, StepMessage::DebugToggled)
+            //         .into()
+            // })
             .push("Feel free to go back and take a look.")
     }
 
