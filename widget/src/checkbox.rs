@@ -52,51 +52,6 @@ where
     icon: Icon<Renderer::Font>,
     style: <Renderer::Theme as StyleSheet>::Style,
 }
-// #[derive(Debug, Clone, Copy)]
-// pub struct CheckboxState {
-//     pub checked: bool,
-//     pub checked_amount: Animation<std::time::Instant, f32>,
-//     pub hovered: bool,
-//     pub hovered_amount: Animation<std::time::Instant, f32>,
-// }
-// impl CheckboxState {
-//     pub fn check(&mut self, value: bool) {
-//         self.checked = value;
-//         self.checked_amount
-//             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
-//     }
-//     pub fn hover(&mut self, value: bool) {
-//         self.hovered = value;
-//         self.hovered_amount
-//             .transition(if value { 1.0 } else { 0.0 }, std::time::Instant::now());
-//     }
-// }
-// impl CheckboxState {
-//     pub fn new(is_checked: bool, is_hovered: bool) -> Self {
-//         Self {
-//             checked: is_checked,
-//             checked_amount: Animation::new(if is_checked {
-//                 1.0
-//             } else {
-//                 0.0
-//             }),
-//             hovered: is_hovered,
-//             hovered_amount: Animation::new(if is_hovered {
-//                 1.0
-//             } else {
-//                 0.0
-//             }),
-//         }
-//     }
-// }
-// impl Animatable for CheckboxState {
-//     fn on_redraw_request_update(&mut self, now: std::time::Instant) -> bool {
-//         let check_redraw = self.checked_amount.tick(now);
-//         let hover_redraw = self.hovered_amount.tick(now);
-//         check_redraw || hover_redraw
-//     }
-// }
-
 impl<'a, Message, Renderer> Checkbox<'a, Message, Renderer>
 where
     Renderer: text::Renderer,
