@@ -69,37 +69,6 @@ impl Application for Example {
     }
 
     fn view(&self) -> Element<Message> {
-        // let default_checkbox =
-        //     checkbox("Default", self.default_checkbox, Message::Checked);
-        // let custom_checkbox = checkbox(
-        //     "Custom",
-        //     self.checked,
-        //     Message::Checked,
-        //     Message::Hovered,
-        // )
-        // .icon(checkbox::Icon {
-        //     font: ICON_FONT,
-        //     code_point: '\u{e901}',
-        //     size: None,
-        //     line_height: text::LineHeight::Relative(1.0),
-        //     shaping: text::Shaping::Basic,
-        // })
-        // .style(Checkbox::Success);
-        // let checkbox = checkbox(
-        //     "Custom",
-        //     false,
-        //     1.0,
-        //     1.0,
-        //     || Message::Checked,
-        //     Message::Hovered,
-        // )
-        // .icon(checkbox::Icon {
-        //     font: ICON_FONT,
-        //     code_point: '\u{e901}',
-        //     size: None,
-        //     line_height: text::LineHeight::Relative(1.0),
-        //     shaping: text::Shaping::Basic,
-        // });
         let hovered = self.hovered.clone();
         let animating = Animator::new(
             (self.checked.animatable(), self.hovered.animatable()),
@@ -124,24 +93,6 @@ impl Application for Example {
                 .into()
             },
         );
-        // let animating = Animator::new( |checked| {
-
-        //     },
-        //     self.checked.animatable(),
-        //     std::time::Duration::from_millis(500),
-        //     Timing::EaseOutQuint,
-        // );
-        // let animating = Animating::new(
-        //     Element::from(custom_checkbox),
-        //     if self.default_checkbox { 1.0 } else { 0.0 },
-        //     Message::AnimationUpdate,
-        // );
-        // .animation(|anim| {
-        //     anim.checked_amount.duration_ms = 1000.0;
-        //     anim.checked_amount.timing = animation::Timing::EaseOutQuint;
-        //     anim.hovered_amount.duration_ms = 200.0;
-        //     anim.hovered_amount.timing = animation::Timing::EaseOutQuint;
-        // });
 
         let content = column![animating].spacing(22);
 
