@@ -1,9 +1,9 @@
-use iced::animation::{self, Animation, Timing, Interpolable};
+use iced::animation::{self, Animation, Interpolable, Timing};
 use iced::executor;
 use iced::font::{self, Font};
 use iced::theme::Checkbox;
-use iced::widget::animated::{Animator, AnimatableConvertible};
-use iced::widget::checkbox::{Appearance};
+use iced::widget::animated::{AnimatableConvertible, Animator};
+use iced::widget::checkbox::Appearance;
 use iced::widget::{checkbox, column, container, text};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 
@@ -16,6 +16,7 @@ pub fn main() -> iced::Result {
 struct Example {
     checked: bool,
     default_checkbox: bool,
+    hovered: bool,
 }
 
 impl Default for Example {
@@ -23,6 +24,7 @@ impl Default for Example {
         Self {
             checked: false,
             default_checkbox: false,
+            hovered: false,
         }
     }
 }
@@ -57,7 +59,9 @@ impl Application for Example {
             Message::Checked => {
                 self.checked = !self.checked;
             }
-            Message::Hovered(_) => (),
+            Message::Hovered(value) => {
+                self.hovered = value;
+            }
             Message::FontLoaded(_) => (),
         }
 
@@ -81,21 +85,45 @@ impl Application for Example {
         //     shaping: text::Shaping::Basic,
         // })
         // .style(Checkbox::Success);
-        let checkbox = checkbox(
-            "Custom",
-            false,
-            1.0,
-            1.0,
-            || { Message::Checked },
-            Message::Hovered,
-        )
-        .icon(checkbox::Icon {
-            font: ICON_FONT,
-            code_point: '\u{e901}',
-            size: None,
-            line_height: text::LineHeight::Relative(1.0),
-            shaping: text::Shaping::Basic,
-        });
+        // let checkbox = checkbox(
+        //     "Custom",
+        //     false,
+        //     1.0,
+        //     1.0,
+        //     || Message::Checked,
+        //     Message::Hovered,
+        // )
+        // .icon(checkbox::Icon {
+        //     font: ICON_FONT,
+        //     code_point: '\u{e901}',
+        //     size: None,
+        //     line_height: text::LineHeight::Relative(1.0),
+        //     shaping: text::Shaping::Basic,
+        // });
+        let hovered = self.hovered.clone();
+        let animating = Animator::new(
+            (self.checked.animatable(), self.hovered.animatable()),
+            std::time::Duration::from_millis(500),
+            Timing::EaseOut,
+            move |(checked_amount, hovered_amount)| {
+                checkbox(
+                    "Custom",
+                    hovered,
+                    checked_amount,
+                    hovered_amount,
+                    || Message::Checked,
+                    Message::Hovered,
+                )
+                .icon(checkbox::Icon {
+                    font: ICON_FONT,
+                    code_point: '\u{e901}',
+                    size: None,
+                    line_height: text::LineHeight::Relative(1.0),
+                    shaping: text::Shaping::Basic,
+                })
+                .into()
+            },
+        );
         // let animating = Animator::new( |checked| {
 
         //     },
@@ -115,7 +143,7 @@ impl Application for Example {
         //     anim.hovered_amount.timing = animation::Timing::EaseOutQuint;
         // });
 
-        let content = column![checkbox].spacing(22);
+        let content = column![animating].spacing(22);
 
         container(content)
             .width(Length::Fill)
