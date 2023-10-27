@@ -47,6 +47,8 @@ system = ["iced_winit/system"]
 web-colors = ["iced_renderer/web-colors"]
 # Enables the WebGL backend, replacing WebGPU
 webgl = ["iced_renderer/webgl"]
+# Enables the syntax `highlighter` module
+highlighter = ["iced_highlighter"]
 # Enables the advanced module
 advanced = []
 
@@ -57,6 +59,9 @@ iced_renderer.workspace = true
 iced_widget.workspace = true
 iced_winit.features = ["application"]
 iced_winit.workspace = true
+
+iced_highlighter.workspace = true
+iced_highlighter.optional = true
 
 thiserror.workspace = true
 
@@ -78,8 +83,9 @@ members = [
     "core",
     "futures",
     "graphics",
-    "runtime",
+    "highlighter",
     "renderer",
+    "runtime",
     "style",
     "tiny_skia",
     "wgpu",
@@ -103,6 +109,7 @@ iced = { version = "0.12", path = "." }
 iced_core = { version = "0.12", path = "core" }
 iced_futures = { version = "0.12", path = "futures" }
 iced_graphics = { version = "0.12", path = "graphics" }
+iced_highlighter = { version = "0.12", path = "highlighter" }
 iced_renderer = { version = "0.12", path = "renderer" }
 iced_runtime = { version = "0.12", path = "runtime" }
 iced_style = { version = "0.12", path = "style" }
@@ -114,10 +121,10 @@ iced_winit = { version = "0.12", path = "winit" }
 async-std = "1.0"
 bitflags = "1.0"
 bytemuck = { version = "1.0", features = ["derive"] }
-cosmic-text = "0.9"
+cosmic-text = "0.10"
 futures = "0.3"
 glam = "0.24"
-glyphon = { git = "https://github.com/grovesNL/glyphon.git", rev = "20f0f8fa80e0d0df4c63634ce9176fa489546ca9" }
+glyphon = { git = "https://github.com/grovesNL/glyphon.git", rev = "2caa9fc5e5923c1d827d177c3619cab7e9885b85" }
 guillotiere = "0.6"
 half = "2.2"
 image = "0.24"
@@ -137,6 +144,7 @@ resvg = "0.35"
 rustc-hash = "1.0"
 smol = "1.0"
 softbuffer = "0.2"
+syntect = "5.1"
 sysinfo = "0.28"
 thiserror = "1.0"
 tiny-skia = "0.10"
@@ -147,7 +155,7 @@ unicode-segmentation = "1.0"
 wasm-bindgen-futures = "0.4"
 wasm-timer = "0.2"
 web-sys = "0.3"
-wgpu = "0.17"
+wgpu = "0.18"
 winapi = "0.3"
 window_clipboard = "0.3"
 winit = { git = "https://github.com/iced-rs/winit.git", rev = "c52db2045d0a2f1b8d9923870de1d4ab1994146e", default-features = false }

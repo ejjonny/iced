@@ -1,5 +1,4 @@
 use crate::core::{Color, Size};
-use crate::graphics;
 use crate::graphics::backend;
 use crate::graphics::color;
 use crate::graphics::{Transformation, Viewport};
@@ -222,10 +221,12 @@ impl Backend {
                             }),
                             None => wgpu::LoadOp::Load,
                         },
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
             },
         ));
 
@@ -271,11 +272,13 @@ impl Backend {
                                 resolve_target: None,
                                 ops: wgpu::Operations {
                                     load: wgpu::LoadOp::Load,
-                                    store: true,
+                                    store: wgpu::StoreOp::Store,
                                 },
                             },
                         )],
                         depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
                     },
                 ));
             }
@@ -310,10 +313,6 @@ impl crate::graphics::Backend for Backend {
 }
 
 impl backend::Text for Backend {
-    fn font_system(&self) -> &graphics::text::FontSystem {
-        self.text_pipeline.font_system()
-    }
-
     fn load_font(&mut self, font: Cow<'static, [u8]>) {
         self.text_pipeline.load_font(font);
     }
