@@ -6,28 +6,6 @@ pub trait AnimatableValue<T = Self> where Self: Clone + std::fmt::Debug + Partia
     fn magnitude(&self) -> f32;
     fn normalized(&self) -> Self;
 }
-
-impl AnimatableValue for Vec<f32> {
-    fn distance(&self, other: &Self) -> f32 {
-        self.diff(other).magnitude()
-    }
-    fn diff(&self, other: &Self) -> Self {
-        self.iter().zip(other.iter()).map(|tuple| tuple.0 - tuple.1).collect()
-    }
-    fn sum(&self, other: &Self) -> Self {
-        self.iter().zip(other.iter()).map(|tuple| tuple.0 + tuple.1).collect()
-    }
-    fn scale(&self, amount: f32) -> Self {
-        self.iter().map(|value| value * amount).collect()
-    }
-    fn magnitude(&self) -> f32 {
-        f32::sqrt(self.iter().map(|v| f32::powf(*v, 2.0)).sum())
-    }
-    fn normalized(&self) -> Self {
-        let magnitude = self.magnitude();
-        self.scale(1.0 / magnitude)
-    }
-}
 impl AnimatableValue for (f32, f32) {
     fn distance(&self, other: &Self) -> f32 {
         self.diff(other).magnitude()
@@ -303,6 +281,7 @@ mod animatedvalue_tests {
         assert!(anim.tick(clock));
         assert!(approximately_equal(anim.position, 10.0));
     }
+
     #[test]
     fn test_interrupt() {
         let mut anim = Animation::<f32, f32>::new(0.0, 1.0, Timing::Linear);
@@ -371,6 +350,7 @@ mod animatedvalue_tests {
         assert_eq!(anim.position, 1.0);
         assert!(!anim.animating());
     }
+
     #[test]
     fn test_multiple_interrupts_start_forward() {
         let mut anim = Animation::<f32, f32>::new(0.0, 1.0, Timing::EaseInOut);
@@ -397,6 +377,7 @@ mod animatedvalue_tests {
             self - time
         }
     }
+
     fn approximately_equal(a: f32, b: f32) -> bool {
         let close = f32::abs(a - b) < 1e-5;
         if !close {
