@@ -1,6 +1,6 @@
 use iced::theme::{self, Theme};
 use iced::widget::{
-    button, checkbox, column, container, horizontal_rule, progress_bar, radio,
+    button, column, container, horizontal_rule, progress_bar, radio,
     row, scrollable, slider, text, text_input, toggler, vertical_rule,
     vertical_space,
 };
@@ -15,7 +15,7 @@ struct Styling {
     theme: Theme,
     input_value: String,
     slider_value: f32,
-    checkbox_value: bool,
+    // checkbox_value: bool,
     toggler_value: bool,
 }
 
@@ -32,7 +32,7 @@ enum Message {
     InputChanged(String),
     ButtonPressed,
     SliderChanged(f32),
-    CheckboxToggled(bool),
+    // CheckboxToggled(bool),
     TogglerToggled(bool),
 }
 
@@ -65,7 +65,7 @@ impl Sandbox for Styling {
             Message::InputChanged(value) => self.input_value = value,
             Message::ButtonPressed => {}
             Message::SliderChanged(value) => self.slider_value = value,
-            Message::CheckboxToggled(value) => self.checkbox_value = value,
+            // Message::CheckboxToggled(value) => self.checkbox_value = value,
             Message::TogglerToggled(value) => self.toggler_value = value,
         }
     }

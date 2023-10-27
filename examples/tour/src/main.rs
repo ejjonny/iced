@@ -1,7 +1,7 @@
 use iced::alignment;
 use iced::theme;
 use iced::widget::{
-    checkbox, column, container, horizontal_space, image, radio, row,
+    column, container, horizontal_space, image, radio, row,
     scrollable, slider, text, text_input, toggler, vertical_space,
 };
 use iced::widget::{Button, Column, Container, Slider};
@@ -616,7 +616,7 @@ impl<'a> Step {
             )
     }
 
-    fn debugger(debug: bool) -> Column<'a, StepMessage> {
+    fn debugger(_debug: bool) -> Column<'a, StepMessage> {
         Self::container("Debugger")
             .push(
                 "You can ask Iced to visually explain the layouting of the \

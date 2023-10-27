@@ -1,7 +1,7 @@
 use iced::alignment;
 use iced::event::{self, Event};
 use iced::executor;
-use iced::widget::{button, checkbox, container, text, Column};
+use iced::widget::{button, container, text, Column};
 use iced::window;
 use iced::{
     Alignment, Application, Command, Element, Length, Settings, Subscription,
@@ -24,7 +24,6 @@ struct Events {
 #[derive(Debug, Clone)]
 enum Message {
     EventOccurred(Event),
-    Toggled(bool),
     Exit,
 }
 
@@ -60,11 +59,11 @@ impl Application for Events {
                     Command::none()
                 }
             }
-            Message::Toggled(enabled) => {
-                self.enabled = enabled;
+            // Message::Toggled(enabled) => {
+            //     self.enabled = enabled;
 
-                Command::none()
-            }
+            //     Command::none()
+            // }
             Message::Exit => window::close(),
         }
     }

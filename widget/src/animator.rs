@@ -142,6 +142,7 @@ where
                 if animation.animating() {
                     let needs_redraw = animation.tick(now);
                     if needs_redraw {
+                        shell.invalidate_layout();
                         shell.request_redraw(window::RedrawRequest::NextFrame);
                     }
                 }

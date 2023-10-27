@@ -3,7 +3,7 @@ use iced::font::{self, Font};
 use iced::keyboard;
 use iced::theme::{self, Theme};
 use iced::widget::{
-    self, button, checkbox, column, container, keyed_column, row, scrollable,
+    self, button, column, container, keyed_column, row, scrollable,
     text, text_input, Text,
 };
 use iced::window;

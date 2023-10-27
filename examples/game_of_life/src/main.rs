@@ -9,7 +9,7 @@ use iced::executor;
 use iced::theme::{self, Theme};
 use iced::time;
 use iced::widget::{
-    button, checkbox, column, container, pick_list, row, slider, text,
+    button, column, container, pick_list, row, slider, text,
 };
 use iced::window;
 use iced::{
@@ -45,7 +45,7 @@ enum Message {
     Grid(grid::Message, usize),
     Tick(Instant),
     TogglePlayback,
-    ToggleGrid(bool),
+    // ToggleGrid(bool),
     Next,
     Clear,
     SpeedChanged(f32),
@@ -99,9 +99,9 @@ impl Application for GameOfLife {
             Message::TogglePlayback => {
                 self.is_playing = !self.is_playing;
             }
-            Message::ToggleGrid(show_grid_lines) => {
-                self.grid.toggle_lines(show_grid_lines);
-            }
+            // Message::ToggleGrid(show_grid_lines) => {
+            //     self.grid.toggle_lines(show_grid_lines);
+            // }
             Message::Clear => {
                 self.grid.clear();
                 self.version += 1;
@@ -136,7 +136,7 @@ impl Application for GameOfLife {
         let selected_speed = self.next_speed.unwrap_or(self.speed);
         let controls = view_controls(
             self.is_playing,
-            self.grid.are_lines_visible(),
+            // self.grid.are_lines_visible(),
             selected_speed,
             self.grid.preset(),
         );
@@ -161,7 +161,7 @@ impl Application for GameOfLife {
 
 fn view_controls<'a>(
     is_playing: bool,
-    is_grid_enabled: bool,
+    // is_grid_enabled: bool,
     speed: usize,
     preset: Preset,
 ) -> Element<'a, Message> {
@@ -362,13 +362,13 @@ mod grid {
             self.preset
         }
 
-        pub fn toggle_lines(&mut self, enabled: bool) {
-            self.show_lines = enabled;
-        }
+        // pub fn toggle_lines(&mut self, enabled: bool) {
+        //     self.show_lines = enabled;
+        // }
 
-        pub fn are_lines_visible(&self) -> bool {
-            self.show_lines
-        }
+        // pub fn are_lines_visible(&self) -> bool {
+        //     self.show_lines
+        // }
 
         fn visible_region(&self, size: Size) -> Region {
             let width = size.width / self.scaling;

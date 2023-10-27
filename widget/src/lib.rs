@@ -20,7 +20,7 @@ mod column;
 mod mouse_area;
 mod row;
 
-pub mod animated;
+pub mod animator;
 pub mod button;
 pub mod checkbox;
 pub mod combo_box;

@@ -1,6 +1,6 @@
 //! Change the appearance of a checkbox.
 use iced_core::{Background, BorderRadius, Color};
-use crate::animation::{self, Interpolable};
+use crate::animation::Interpolable;
 
 /// The appearance of a checkbox.
 #[derive(Debug, Clone, Copy)]

@@ -1,5 +1,5 @@
 use iced::theme;
-use iced::widget::{checkbox, column, container, svg};
+use iced::widget::{column, container, svg};
 use iced::{color, Element, Length, Sandbox, Settings};
 
 pub fn main() -> iced::Result {

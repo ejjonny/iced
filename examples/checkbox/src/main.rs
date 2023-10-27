@@ -1,9 +1,7 @@
-use iced::animation::{self, Animation, Interpolable, Timing};
+use iced::animation::{Interpolable, Timing};
 use iced::executor;
 use iced::font::{self, Font};
-use iced::theme::Checkbox;
-use iced::widget::animated::{AnimatableConvertible, Animator};
-use iced::widget::checkbox::Appearance;
+use iced::widget::animator::{AnimatableConvertible, Animator};
 use iced::widget::{checkbox, column, container, text};
 use iced::{Application, Command, Element, Length, Settings, Theme};
 
@@ -15,7 +13,7 @@ pub fn main() -> iced::Result {
 
 struct Example {
     checked: bool,
-    default_checkbox: bool,
+
     hovered: bool,
 }
 
@@ -23,7 +21,7 @@ impl Default for Example {
     fn default() -> Self {
         Self {
             checked: false,
-            default_checkbox: false,
+            // default_checkbox: false,
             hovered: false,
         }
     }

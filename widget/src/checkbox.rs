@@ -12,7 +12,7 @@ use crate::core::{
     Clipboard, Element, Layout, Length, Pixels, Rectangle, Shell, Size, Widget,
 };
 
-use iced_style::animation::{Animation, Interpolable};
+use iced_style::animation::Interpolable;
 pub use iced_style::checkbox::{Appearance, StyleSheet};
 
 /// A box that can be checked.
@@ -285,7 +285,7 @@ where
         theme: &Renderer::Theme,
         style: &renderer::Style,
         layout: Layout<'_>,
-        cursor: mouse::Cursor,
+        _cursor: mouse::Cursor,
         _viewport: &Rectangle,
     ) {
         let checked_amount = self.checked_amount;
